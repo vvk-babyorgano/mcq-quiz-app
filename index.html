@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MCQ Quiz - Points System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 700px;
+        width: 100%;
+        padding: 40px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .user-form {
+        margin-bottom: 30px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .quiz-section {
+        display: none;
+      }
+
+      .quiz-section.active {
+        display: block;
+      }
+
+      .question-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border-left: 4px solid #667eea;
+      }
+
+      .question-text {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 16px;
+      }
+
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .option {
+        display: flex;
+        align-items: center;
+        padding: 14px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .option:hover {
+        border-color: #667eea;
+        background: #f0f4ff;
+      }
+
+      .option.selected {
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+      }
+
+      .option input[type="radio"] {
+        margin-right: 12px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+
+      .option-label {
+        cursor: pointer;
+        flex: 1;
+        font-size: 16px;
+      }
+
+      .points-badge {
+        background: #ffd700;
+        color: #333;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-left: 8px;
+      }
+
+      .option.selected .points-badge {
+        background: white;
+        color: #667eea;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .result-section {
+        display: none;
+        text-align: center;
+      }
+
+      .result-section.active {
+        display: block;
+      }
+
+      .total-points {
+        font-size: 64px;
+        font-weight: 700;
+        color: #667eea;
+        margin: 20px 0;
+      }
+
+      .result-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 12px;
+        margin: 20px 0;
+      }
+
+      .result-details p {
+        margin: 10px 0;
+        font-size: 18px;
+        color: #333;
+      }
+
+      .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 20px;
+        border: 1px solid #c3e6cb;
+      }
+
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 20px;
+        border: 1px solid #f5c6cb;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 24px;
+        }
+
+        .question-text {
+          font-size: 16px;
+        }
+
+        .total-points {
+          font-size: 48px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎯 Quiz Assessment</h1>
+      <p class="subtitle">
+        All options are correct - each has different points!
+      </p>
+
+      <!-- User Information Form -->
+      <div id="userForm" class="user-form">
+        <div class="form-group">
+          <label for="userName">Your Name *</label>
+          <input
+            type="text"
+            id="userName"
+            placeholder="Enter your full name"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="userDepartment">Department *</label>
+          <input
+            type="text"
+            id="userDepartment"
+            placeholder="Enter your department"
+            required
+          />
+        </div>
+        <button class="btn" onclick="startQuiz()">Start Quiz</button>
+      </div>
+
+      <!-- Quiz Section -->
+      <div id="quizSection" class="quiz-section">
+        <div id="questionsContainer"></div>
+        <button class="btn" onclick="submitQuiz()">Submit Quiz</button>
+      </div>
+
+      <!-- Result Section -->
+      <div id="resultSection" class="result-section">
+        <h2>🎉 Quiz Completed!</h2>
+        <div class="total-points" id="totalPoints">0</div>
+        <p style="font-size: 18px; color: #666">Total Points</p>
+        <div class="result-details">
+          <p><strong>Name:</strong> <span id="resultName"></span></p>
+          <p>
+            <strong>Department:</strong> <span id="resultDepartment"></span>
+          </p>
+        </div>
+        <div id="statusMessage"></div>
+      </div>
+    </div>
+
+    <script>
+      // ======== SUPABASE CONFIGURATION ========
+      const supabaseUrl = "https://ggyusywsblhyrhbtpupt.supabase.co";
+      const supabaseAnonKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneXVzeXdzYmxoeXJoYnRwdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxNjk1NDAsImV4cCI6MjA2ODc0NTU0MH0.HJyFrT9zm7qC2sQJN9WmubEOzauEU08OrclkkowoAl0";
+      const supabase = window.supabase.createClient(
+        supabaseUrl,
+        supabaseAnonKey
+      );
+
+      // ======== QUIZ DATA ========
+      const quizData = [
+        {
+          id: 1,
+          question: "What is your preferred work style?",
+          options: [
+            { text: "Independent work", points: 10 },
+            { text: "Team collaboration", points: 15 },
+            { text: "Mix of both", points: 12 },
+            { text: "Leadership role", points: 18 },
+          ],
+        },
+        {
+          id: 2,
+          question: "How do you handle challenging projects?",
+          options: [
+            { text: "Break them into smaller tasks", points: 14 },
+            { text: "Dive right in", points: 8 },
+            { text: "Seek guidance first", points: 11 },
+            { text: "Collaborate with others", points: 16 },
+          ],
+        },
+        {
+          id: 3,
+          question: "What motivates you most at work?",
+          options: [
+            { text: "Recognition", points: 13 },
+            { text: "Learning new skills", points: 17 },
+            { text: "Helping others", points: 15 },
+            { text: "Achieving goals", points: 19 },
+          ],
+        },
+        {
+          id: 4,
+          question: "How do you communicate ideas?",
+          options: [
+            { text: "Written documentation", points: 12 },
+            { text: "Verbal presentations", points: 16 },
+            { text: "Visual diagrams", points: 14 },
+            { text: "One-on-one discussions", points: 10 },
+          ],
+        },
+        {
+          id: 5,
+          question: "What's your approach to deadlines?",
+          options: [
+            { text: "Plan ahead and finish early", points: 20 },
+            { text: "Work steadily throughout", points: 15 },
+            { text: "Last-minute focused effort", points: 8 },
+            { text: "Flexible and adaptive", points: 13 },
+          ],
+        },
+      ];
+
+      let userData = {};
+      let selectedAnswers = {};
+
+      // ======== RENDER QUIZ ========
+      function renderQuiz() {
+        const container = document.getElementById("questionsContainer");
+        container.innerHTML = "";
+
+        quizData.forEach((question) => {
+          const questionCard = document.createElement("div");
+          questionCard.className = "question-card";
+          questionCard.innerHTML = `
+          <div class="question-text">${question.id}. ${question.question}</div>
+          <div class="options">
+            ${question.options
+              .map(
+                (option, index) => `
+              <label class="option" id="option-${question.id}-${index}">
+                <input type="radio" name="question-${question.id}" value="${option.points}" 
+                  onchange="selectOption(${question.id}, ${index}, ${option.points})">
+                <span class="option-label">${option.text}</span>
+                <span class="points-badge">${option.points} pts</span>
+              </label>
+            `
+              )
+              .join("")}
+          </div>
+        `;
+          container.appendChild(questionCard);
+        });
+      }
+
+      // ======== SELECT OPTION ========
+      function selectOption(questionId, optionIndex, points) {
+        selectedAnswers[questionId] = points;
+
+        // Remove selected class from all options of this question
+        quizData[questionId - 1].options.forEach((_, idx) => {
+          const optionEl = document.getElementById(
+            `option-${questionId}-${idx}`
+          );
+          optionEl.classList.remove("selected");
+        });
+
+        // Add selected class to chosen option
+        const selectedOption = document.getElementById(
+          `option-${questionId}-${optionIndex}`
+        );
+        selectedOption.classList.add("selected");
+      }
+
+      // ======== START QUIZ ========
+      function startQuiz() {
+        const name = document.getElementById("userName").value.trim();
+        const department = document
+          .getElementById("userDepartment")
+          .value.trim();
+
+        if (!name || !department) {
+          alert("Please fill in both name and department!");
+          return;
+        }
+
+        userData = { name, department };
+
+        // Save to localStorage
+        localStorage.setItem("quizUserData", JSON.stringify(userData));
+
+        // Show quiz section
+        document.getElementById("userForm").style.display = "none";
+        document.getElementById("quizSection").classList.add("active");
+
+        renderQuiz();
+      }
+
+      // ======== SUBMIT QUIZ ========
+      async function submitQuiz() {
+        // Check if all questions are answered
+        if (Object.keys(selectedAnswers).length !== quizData.length) {
+          alert("Please answer all questions before submitting!");
+          return;
+        }
+
+        // Calculate total points
+        const totalPoints = Object.values(selectedAnswers).reduce(
+          (sum, points) => sum + points,
+          0
+        );
+
+        // Save to localStorage
+        const quizResult = {
+          ...userData,
+          totalPoints,
+          answers: selectedAnswers,
+          timestamp: new Date().toISOString(),
+        };
+        localStorage.setItem("quizResult", JSON.stringify(quizResult));
+
+        // Show result section
+        document.getElementById("quizSection").classList.remove("active");
+        document.getElementById("resultSection").classList.add("active");
+        document.getElementById("totalPoints").textContent = totalPoints;
+        document.getElementById("resultName").textContent = userData.name;
+        document.getElementById("resultDepartment").textContent =
+          userData.department;
+
+        // Save to Supabase
+        await saveToSupabase(userData.name, userData.department, totalPoints);
+      }
+
+      // ======== SAVE TO SUPABASE ========
+      async function saveToSupabase(name, department, points) {
+        const statusDiv = document.getElementById("statusMessage");
+        statusDiv.innerHTML =
+          '<p style="color: #666;">Saving to database...</p>';
+
+        try {
+          const { data, error } = await supabase.from("quiz_results").insert([
+            {
+              name: name,
+              department: department,
+              points: points,
+              created_at: new Date().toISOString(),
+            },
+          ]);
+
+          if (error) throw error;
+
+          statusDiv.innerHTML =
+            '<div class="success-message">✅ Results saved successfully to database!</div>';
+        } catch (error) {
+          console.error("Error saving to Supabase:", error);
+          statusDiv.innerHTML = `<div class="error-message">⚠️ Error saving to database: ${error.message}</div>`;
+        }
+      }
+
+      // ======== LOAD FROM LOCALSTORAGE ON PAGE LOAD ========
+      window.onload = function () {
+        const savedUserData = localStorage.getItem("quizUserData");
+        if (savedUserData) {
+          const data = JSON.parse(savedUserData);
+          document.getElementById("userName").value = data.name;
+          document.getElementById("userDepartment").value = data.department;
+        }
+      };
+    </script>
+  </body>
+</html>
