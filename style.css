@@ -6,12 +6,13 @@
 
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* background: linear-gradient(135deg, #e51a4b 0%, #764ba2 100%); */
   min-height: 100vh;
   padding: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
 
 .container {
@@ -62,7 +63,7 @@ input[type="text"] {
 
 input[type="text"]:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #e51a4b;
 }
 
 .quiz-section {
@@ -78,7 +79,7 @@ input[type="text"]:focus {
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #e51a4b;
 }
 
 .question-text {
@@ -106,13 +107,13 @@ input[type="text"]:focus {
 }
 
 .option:hover {
-  border-color: #667eea;
-  background: #f0f4ff;
+  border-color: #e51a4b;
+  background: #fff0f3;
 }
 
 .option.selected {
-  border-color: #667eea;
-  background: #667eea;
+  border-color: #e51a4b;
+  background: #e51a4b;
   color: white;
 }
 
@@ -142,11 +143,11 @@ input[type="text"]:focus {
 
 .option.selected .points-badge {
   background: white;
-  color: #667eea;
+  color: #e51a4b;
 }
 
 .btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #e51a4b 0%, #764ba2 100%);
   color: white;
   border: none;
   padding: 14px 32px;
@@ -185,7 +186,7 @@ input[type="text"]:focus {
 .total-points {
   font-size: 64px;
   font-weight: 700;
-  color: #667eea;
+  color: #e51a4b;
   margin: 20px 0;
 }
 
