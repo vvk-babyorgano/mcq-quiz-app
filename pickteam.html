@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Team Registration System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="pickteam.css" />
+    <link rel="icon" type="image/png" href="image/favicon.png" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏆 Team Registration</h1>
+
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-number" id="totalPlayers">0</div>
+          <div class="stat-label">Total Players</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="liveCount">0</div>
+          <div class="stat-label">Live Now</div>
+        </div>
+      </div>
+
+      <div id="registrationForm">
+        <div class="form-group">
+          <label for="playerName">Enter Your Name</label>
+          <input
+            type="text"
+            id="playerName"
+            placeholder="Your name here..."
+            maxlength="50"
+          />
+        </div>
+
+        <button id="registerBtn">Pick a Team</button>
+      </div>
+
+      <div id="successMessage" style="display: none">
+        <div class="success-message">
+          <div>✅ Registration Successful!</div>
+          <div style="margin-top: 10px">
+            <strong id="playerNameDisplay"></strong>
+          </div>
+          <div class="team-badge" id="teamBadge"></div>
+        </div>
+      </div>
+
+      <div class="teams-display" id="teamsDisplay">
+        <!-- Teams will be dynamically generated -->
+      </div>
+    </div>
+
+    <script>
+      // ======== SUPABASE CONFIGURATION ========
+      const supabaseUrl = "https://ggyusywsblhyrhbtpupt.supabase.co";
+      const supabaseAnonKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneXVzeXdzYmxoeXJoYnRwdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxNjk1NDAsImV4cCI6MjA2ODc0NTU0MH0.HJyFrT9zm7qC2sQJN9WmubEOzauEU08OrclkkowoAl0";
+      const supabase = window.supabase.createClient(
+        supabaseUrl,
+        supabaseAnonKey
+      );
+
+      // ======== CONFIGURATION ========
+      const MAX_PLAYERS_PER_TEAM = 5; // Maximum players allowed in each team
+
+      // ======== STATE MANAGEMENT (In-Memory) ========
+      let currentPlayer = null;
+      let allPlayers = [];
+      let sessionId =
+        "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+
+      // ======== DOM ELEMENTS ========
+      const playerNameInput = document.getElementById("playerName");
+      const registerBtn = document.getElementById("registerBtn");
+      const registrationForm = document.getElementById("registrationForm");
+      const successMessage = document.getElementById("successMessage");
+      const playerNameDisplay = document.getElementById("playerNameDisplay");
+      const teamBadge = document.getElementById("teamBadge");
+      const totalPlayersEl = document.getElementById("totalPlayers");
+      const liveCountEl = document.getElementById("liveCount");
+      const teamsDisplayEl = document.getElementById("teamsDisplay");
+
+      // ======== INITIALIZE ========
+      async function init() {
+        await loadPlayers();
+        setupRealtimeSubscription();
+        updateUI();
+      }
+
+      // ======== LOAD PLAYERS FROM SUPABASE ========
+      async function loadPlayers() {
+        try {
+          const { data, error } = await supabase
+            .from("players")
+            .select("*")
+            .order("created_at", { ascending: true });
+
+          if (error) throw error;
+
+          allPlayers = data || [];
+          updateStats();
+        } catch (error) {
+          console.error("Error loading players:", error);
+        }
+      }
+
+      // ======== REALTIME SUBSCRIPTION ========
+      function setupRealtimeSubscription() {
+        supabase
+          .channel("players_channel")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "players" },
+            (payload) => {
+              console.log("Change received!", payload);
+              loadPlayers();
+            }
+          )
+          .subscribe();
+      }
+
+      // ======== REGISTER PLAYER ========
+      async function registerPlayer() {
+        const name = playerNameInput.value.trim();
+
+        if (!name) {
+          alert("Please enter your name!");
+          return;
+        }
+
+        // Check if already registered in this session
+        if (currentPlayer) {
+          alert("You have already registered!");
+          return;
+        }
+
+        registerBtn.disabled = true;
+        registerBtn.textContent = "Registering...";
+
+        try {
+          // Assign random team based on current player count
+          const totalPlayers = allPlayers.length;
+          const assignedTeam = getRandomTeam(totalPlayers);
+
+          // Insert into Supabase
+          const { data, error } = await supabase
+            .from("players")
+            .insert([
+              {
+                name: name,
+                team: assignedTeam,
+                session_id: sessionId,
+                is_active: true,
+              },
+            ])
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Save to in-memory state
+          currentPlayer = data;
+
+          // Update UI
+          showSuccessMessage(data.name, data.team);
+        } catch (error) {
+          console.error("Error registering player:", error);
+          alert("Registration failed. Please try again.");
+          registerBtn.disabled = false;
+          registerBtn.textContent = "Pick a Team";
+        }
+      }
+
+      // ======== GET RANDOM TEAM ASSIGNMENT ========
+      function getRandomTeam(totalPlayers) {
+        // Get current team counts
+        const teamCounts = {};
+        allPlayers.forEach((player) => {
+          if (player.team) {
+            teamCounts[player.team] = (teamCounts[player.team] || 0) + 1;
+          }
+        });
+
+        // Find teams that are not full (less than MAX_PLAYERS_PER_TEAM)
+        const availableTeams = [];
+        const existingTeams = Object.keys(teamCounts).map(Number);
+
+        // Check existing teams for availability
+        existingTeams.forEach((teamNum) => {
+          if (teamCounts[teamNum] < MAX_PLAYERS_PER_TEAM) {
+            availableTeams.push(teamNum);
+          }
+        });
+
+        // If no available teams or we want to randomly create a new team
+        // Create new team if all existing teams are full
+        if (availableTeams.length === 0 || existingTeams.length === 0) {
+          const newTeamNum =
+            existingTeams.length > 0 ? Math.max(...existingTeams) + 1 : 1;
+          availableTeams.push(newTeamNum);
+        }
+
+        // Randomly pick from available teams
+        const randomIndex = Math.floor(Math.random() * availableTeams.length);
+        return availableTeams[randomIndex];
+      }
+
+      // ======== GET TEAM COUNTS ========
+      function getTeamCounts() {
+        const counts = {};
+        allPlayers.forEach((player) => {
+          if (player.team) {
+            counts[player.team] = (counts[player.team] || 0) + 1;
+          }
+        });
+        return counts;
+      }
+
+      // ======== GET TOTAL NUMBER OF TEAMS ========
+      function getTotalTeams() {
+        const teamNumbers = allPlayers.map((p) => p.team).filter(Boolean);
+        return teamNumbers.length > 0 ? Math.max(...teamNumbers) : 0;
+      }
+
+      // ======== UPDATE STATISTICS ========
+      function updateStats() {
+        const teamCounts = getTeamCounts();
+        const totalPlayers = allPlayers.length;
+        const livePlayers = allPlayers.filter((p) => p.is_active).length;
+
+        totalPlayersEl.textContent = totalPlayers;
+        liveCountEl.textContent = livePlayers;
+
+        // Generate team cards dynamically
+        renderTeamCards(teamCounts);
+      }
+
+      // ======== RENDER TEAM CARDS ========
+      function renderTeamCards(teamCounts) {
+        const teamColors = [
+          "#ff6b6b",
+          "#4ecdc4",
+          "#45b7d1",
+          "#f39c12",
+          "#9b59b6",
+          "#1abc9c",
+          "#e74c3c",
+          "#3498db",
+          "#2ecc71",
+          "#f1c40f",
+          "#e67e22",
+          "#95a5a6",
+        ];
+
+        teamsDisplayEl.innerHTML = "";
+
+        // Sort team numbers
+        const teamNumbers = Object.keys(teamCounts)
+          .map(Number)
+          .sort((a, b) => a - b);
+
+        if (teamNumbers.length === 0) {
+          teamsDisplayEl.innerHTML =
+            '<p style="text-align: center; color: #999; padding: 20px;">No teams yet. Be the first to join!</p>';
+          return;
+        }
+
+        teamNumbers.forEach((teamNum) => {
+          const count = teamCounts[teamNum];
+          const color = teamColors[(teamNum - 1) % teamColors.length];
+
+          const teamCard = document.createElement("div");
+          teamCard.className = "team-card";
+          teamCard.style.background = color;
+          teamCard.innerHTML = `
+          <h3>Team ${teamNum}</h3>
+          <div class="count">${count}</div>
+        `;
+
+          teamsDisplayEl.appendChild(teamCard);
+        });
+      }
+
+      // ======== SHOW SUCCESS MESSAGE ========
+      function showSuccessMessage(name, team) {
+        registrationForm.style.display = "none";
+        successMessage.style.display = "block";
+        playerNameDisplay.textContent = name;
+        teamBadge.textContent = `Team ${team}`;
+        teamBadge.className = `team-badge team-${team}`;
+      }
+
+      // ======== UPDATE UI ========
+      function updateUI() {
+        if (currentPlayer) {
+          showSuccessMessage(currentPlayer.name, currentPlayer.team);
+        }
+      }
+
+      // ======== EVENT LISTENERS ========
+      registerBtn.addEventListener("click", registerPlayer);
+
+      playerNameInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          registerPlayer();
+        }
+      });
+
+      // ======== START APP ========
+      init();
+    </script>
+  </body>
+</html>
