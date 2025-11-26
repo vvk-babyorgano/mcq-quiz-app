@@ -68,6 +68,7 @@
 
       // ======== CONFIGURATION ========
       const MAX_PLAYERS_PER_TEAM = 5; // Maximum players allowed in each team
+      const MAX_TEAMS = 5; // Keep maximum 5 teams
 
       // ======== STATE MANAGEMENT ========
       let currentPlayer = null;
@@ -195,8 +196,8 @@
           // Reload latest players to get accurate count
           await loadPlayers();
 
-          // Assign random team based on current player count
-          const assignedTeam = getRandomTeam();
+          // Assign team with balanced distribution
+          const assignedTeam = getBalancedTeam();
 
           // Insert into Supabase
           const { data, error } = await supabase
@@ -227,15 +228,8 @@
         }
       }
 
-      // ======== GET RANDOM TEAM ASSIGNMENT ========
-      function getRandomTeam() {
-        const totalPlayers = allPlayers.length;
-
-        // Calculate how many teams we could potentially have
-        const maxPossibleTeams = Math.ceil(
-          (totalPlayers + 1) / MAX_PLAYERS_PER_TEAM
-        );
-
+      // ======== GET BALANCED TEAM ASSIGNMENT ========
+      function getBalancedTeam() {
         // Get current team counts
         const teamCounts = {};
         allPlayers.forEach((player) => {
@@ -244,25 +238,26 @@
           }
         });
 
-        // Find teams that are not full
-        const availableTeams = [];
-
-        // Check all possible teams from 1 to maxPossibleTeams
-        for (let i = 1; i <= maxPossibleTeams; i++) {
-          const currentCount = teamCounts[i] || 0;
-          if (currentCount < MAX_PLAYERS_PER_TEAM) {
-            availableTeams.push(i);
+        // Initialize all MAX_TEAMS with count 0 if they don't exist
+        for (let i = 1; i <= MAX_TEAMS; i++) {
+          if (!teamCounts[i]) {
+            teamCounts[i] = 0;
           }
         }
 
-        // If somehow no teams available (all full), create a new one
-        if (availableTeams.length === 0) {
-          availableTeams.push(maxPossibleTeams + 1);
+        // Find the team with minimum players
+        let minTeam = 1;
+        let minCount = teamCounts[1];
+
+        for (let i = 2; i <= MAX_TEAMS; i++) {
+          if (teamCounts[i] < minCount) {
+            minCount = teamCounts[i];
+            minTeam = i;
+          }
         }
 
-        // RANDOM selection from ALL available teams
-        const randomIndex = Math.floor(Math.random() * availableTeams.length);
-        return availableTeams[randomIndex];
+        // Return the team with fewest players
+        return minTeam;
       }
 
       // ======== GET TEAM COUNTS ========
