@@ -14,12 +14,12 @@
 
       <div class="stats">
         <div class="stat-item">
-          <div class="stat-number" id="totalPlayers">0</div>
-          <div class="stat-label">Total Players</div>
+          <div class="stat-number" id="totalRegistered">0</div>
+          <div class="stat-label">Total Registered</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number" id="liveCount">0</div>
-          <div class="stat-label">Live Now</div>
+          <div class="stat-number pulse" id="liveCount">0</div>
+          <div class="stat-label">Live Now 🟢</div>
         </div>
       </div>
 
@@ -34,7 +34,11 @@
           />
         </div>
 
-        <button id="registerBtn">Pick a Team</button>
+        <div class="info-text">
+          ℹ️ Enter your name first, then click "Pick a Team" to get assigned!
+        </div>
+
+        <button id="registerBtn" style="margin-top: 20px">Pick a Team</button>
       </div>
 
       <div id="successMessage" style="display: none">
@@ -65,11 +69,15 @@
       // ======== CONFIGURATION ========
       const MAX_PLAYERS_PER_TEAM = 5; // Maximum players allowed in each team
 
-      // ======== STATE MANAGEMENT (In-Memory) ========
+      // ======== STATE MANAGEMENT ========
       let currentPlayer = null;
       let allPlayers = [];
-      let sessionId =
-        "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+      let allPresences = [];
+      let myPresenceId =
+        "presence_" +
+        Date.now() +
+        "_" +
+        Math.random().toString(36).substr(2, 9);
 
       // ======== DOM ELEMENTS ========
       const playerNameInput = document.getElementById("playerName");
@@ -78,7 +86,7 @@
       const successMessage = document.getElementById("successMessage");
       const playerNameDisplay = document.getElementById("playerNameDisplay");
       const teamBadge = document.getElementById("teamBadge");
-      const totalPlayersEl = document.getElementById("totalPlayers");
+      const totalRegisteredEl = document.getElementById("totalRegistered");
       const liveCountEl = document.getElementById("liveCount");
       const teamsDisplayEl = document.getElementById("teamsDisplay");
 
@@ -86,7 +94,11 @@
       async function init() {
         await loadPlayers();
         setupRealtimeSubscription();
+        setupPresenceTracking();
         updateUI();
+
+        // Update presence every 5 seconds
+        setInterval(updatePresence, 5000);
       }
 
       // ======== LOAD PLAYERS FROM SUPABASE ========
@@ -104,6 +116,46 @@
         } catch (error) {
           console.error("Error loading players:", error);
         }
+      }
+
+      // ======== PRESENCE TRACKING ========
+      async function setupPresenceTracking() {
+        // Create presence channel
+        const presenceChannel = supabase.channel("online_users", {
+          config: {
+            presence: {
+              key: myPresenceId,
+            },
+          },
+        });
+
+        // Track presence
+        presenceChannel
+          .on("presence", { event: "sync" }, () => {
+            const state = presenceChannel.presenceState();
+            allPresences = Object.values(state).flat();
+            updateStats();
+          })
+          .subscribe(async (status) => {
+            if (status === "SUBSCRIBED") {
+              await updatePresence();
+            }
+          });
+
+        // Update presence on page visibility change
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden) {
+            updatePresence();
+          }
+        });
+      }
+
+      async function updatePresence() {
+        const presenceChannel = supabase.channel("online_users");
+        await presenceChannel.track({
+          user_id: myPresenceId,
+          online_at: new Date().toISOString(),
+        });
       }
 
       // ======== REALTIME SUBSCRIPTION ========
@@ -126,7 +178,7 @@
         const name = playerNameInput.value.trim();
 
         if (!name) {
-          alert("Please enter your name!");
+          alert("Please enter your name first!");
           return;
         }
 
@@ -137,12 +189,14 @@
         }
 
         registerBtn.disabled = true;
-        registerBtn.textContent = "Registering...";
+        registerBtn.textContent = "Assigning Team...";
 
         try {
+          // Reload latest players to get accurate count
+          await loadPlayers();
+
           // Assign random team based on current player count
-          const totalPlayers = allPlayers.length;
-          const assignedTeam = getRandomTeam(totalPlayers);
+          const assignedTeam = getRandomTeam();
 
           // Insert into Supabase
           const { data, error } = await supabase
@@ -151,7 +205,7 @@
               {
                 name: name,
                 team: assignedTeam,
-                session_id: sessionId,
+                session_id: myPresenceId,
                 is_active: true,
               },
             ])
@@ -174,7 +228,7 @@
       }
 
       // ======== GET RANDOM TEAM ASSIGNMENT ========
-      function getRandomTeam(totalPlayers) {
+      function getRandomTeam() {
         // Get current team counts
         const teamCounts = {};
         allPlayers.forEach((player) => {
@@ -194,9 +248,8 @@
           }
         });
 
-        // If no available teams or we want to randomly create a new team
-        // Create new team if all existing teams are full
-        if (availableTeams.length === 0 || existingTeams.length === 0) {
+        // If no available teams or no existing teams, create new team
+        if (availableTeams.length === 0) {
           const newTeamNum =
             existingTeams.length > 0 ? Math.max(...existingTeams) + 1 : 1;
           availableTeams.push(newTeamNum);
@@ -218,20 +271,14 @@
         return counts;
       }
 
-      // ======== GET TOTAL NUMBER OF TEAMS ========
-      function getTotalTeams() {
-        const teamNumbers = allPlayers.map((p) => p.team).filter(Boolean);
-        return teamNumbers.length > 0 ? Math.max(...teamNumbers) : 0;
-      }
-
       // ======== UPDATE STATISTICS ========
       function updateStats() {
         const teamCounts = getTeamCounts();
         const totalPlayers = allPlayers.length;
-        const livePlayers = allPlayers.filter((p) => p.is_active).length;
+        const liveUsers = allPresences.length;
 
-        totalPlayersEl.textContent = totalPlayers;
-        liveCountEl.textContent = livePlayers;
+        totalRegisteredEl.textContent = totalPlayers;
+        liveCountEl.textContent = liveUsers;
 
         // Generate team cards dynamically
         renderTeamCards(teamCounts);
@@ -306,6 +353,12 @@
         if (e.key === "Enter") {
           registerPlayer();
         }
+      });
+
+      // ======== PAGE UNLOAD - CLEANUP ========
+      window.addEventListener("beforeunload", () => {
+        const presenceChannel = supabase.channel("online_users");
+        presenceChannel.untrack();
       });
 
       // ======== START APP ========

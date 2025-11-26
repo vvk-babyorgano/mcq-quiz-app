@@ -55,6 +55,20 @@ h1 {
   margin-top: 5px;
 }
 
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 .form-group {
   margin-bottom: 20px;
 }
@@ -139,6 +153,14 @@ button:disabled {
   background: #45b7d1;
   color: white;
 }
+.team-4 {
+  background: #f39c12;
+  color: white;
+}
+.team-5 {
+  background: #9b59b6;
+  color: white;
+}
 
 .teams-display {
   margin-top: 30px;
@@ -163,6 +185,16 @@ button:disabled {
 .team-card .count {
   font-size: 2em;
   font-weight: bold;
+}
+
+.info-text {
+  text-align: center;
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff3cd;
+  border-radius: 8px;
 }
 
 .loading {
