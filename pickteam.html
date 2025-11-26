@@ -229,6 +229,13 @@
 
       // ======== GET RANDOM TEAM ASSIGNMENT ========
       function getRandomTeam() {
+        const totalPlayers = allPlayers.length;
+
+        // Calculate how many teams we could potentially have
+        const maxPossibleTeams = Math.ceil(
+          (totalPlayers + 1) / MAX_PLAYERS_PER_TEAM
+        );
+
         // Get current team counts
         const teamCounts = {};
         allPlayers.forEach((player) => {
@@ -237,25 +244,23 @@
           }
         });
 
-        // Find teams that are not full (less than MAX_PLAYERS_PER_TEAM)
+        // Find teams that are not full
         const availableTeams = [];
-        const existingTeams = Object.keys(teamCounts).map(Number);
 
-        // Check existing teams for availability
-        existingTeams.forEach((teamNum) => {
-          if (teamCounts[teamNum] < MAX_PLAYERS_PER_TEAM) {
-            availableTeams.push(teamNum);
+        // Check all possible teams from 1 to maxPossibleTeams
+        for (let i = 1; i <= maxPossibleTeams; i++) {
+          const currentCount = teamCounts[i] || 0;
+          if (currentCount < MAX_PLAYERS_PER_TEAM) {
+            availableTeams.push(i);
           }
-        });
-
-        // If no available teams or no existing teams, create new team
-        if (availableTeams.length === 0) {
-          const newTeamNum =
-            existingTeams.length > 0 ? Math.max(...existingTeams) + 1 : 1;
-          availableTeams.push(newTeamNum);
         }
 
-        // Randomly pick from available teams
+        // If somehow no teams available (all full), create a new one
+        if (availableTeams.length === 0) {
+          availableTeams.push(maxPossibleTeams + 1);
+        }
+
+        // RANDOM selection from ALL available teams
         const randomIndex = Math.floor(Math.random() * availableTeams.length);
         return availableTeams[randomIndex];
       }
