@@ -51,6 +51,12 @@
         </div>
       </div>
 
+      <div id="errorMessage" style="display: none">
+        <div class="error-message">
+          <div>❌ <span id="errorText"></span></div>
+        </div>
+      </div>
+
       <div class="teams-display" id="teamsDisplay">
         <!-- Teams will be dynamically generated -->
       </div>
@@ -67,8 +73,8 @@
       );
 
       // ======== CONFIGURATION ========
-      const MAX_PLAYERS_PER_TEAM = 5; // Maximum players allowed in each team
-      const MAX_TEAMS = 5; // Keep maximum 5 teams
+      const MAX_PLAYERS_PER_TEAM = 5;
+      const MAX_TEAMS = 5;
 
       // ======== STATE MANAGEMENT ========
       let currentPlayer = null;
@@ -85,6 +91,8 @@
       const registerBtn = document.getElementById("registerBtn");
       const registrationForm = document.getElementById("registrationForm");
       const successMessage = document.getElementById("successMessage");
+      const errorMessage = document.getElementById("errorMessage");
+      const errorText = document.getElementById("errorText");
       const playerNameDisplay = document.getElementById("playerNameDisplay");
       const teamBadge = document.getElementById("teamBadge");
       const totalRegisteredEl = document.getElementById("totalRegistered");
@@ -98,7 +106,6 @@
         setupPresenceTracking();
         updateUI();
 
-        // Update presence every 5 seconds
         setInterval(updatePresence, 5000);
       }
 
@@ -121,7 +128,6 @@
 
       // ======== PRESENCE TRACKING ========
       async function setupPresenceTracking() {
-        // Create presence channel
         const presenceChannel = supabase.channel("online_users", {
           config: {
             presence: {
@@ -130,7 +136,6 @@
           },
         });
 
-        // Track presence
         presenceChannel
           .on("presence", { event: "sync" }, () => {
             const state = presenceChannel.presenceState();
@@ -143,7 +148,6 @@
             }
           });
 
-        // Update presence on page visibility change
         document.addEventListener("visibilitychange", () => {
           if (!document.hidden) {
             updatePresence();
@@ -179,27 +183,40 @@
         const name = playerNameInput.value.trim();
 
         if (!name) {
-          alert("Please enter your name first!");
+          showError("Please enter your name first!");
           return;
         }
 
-        // Check if already registered in this session
         if (currentPlayer) {
-          alert("You have already registered!");
+          showError("You have already registered!");
           return;
         }
 
         registerBtn.disabled = true;
-        registerBtn.textContent = "Assigning Team...";
+        registerBtn.textContent = "Checking...";
+        errorMessage.style.display = "none";
 
         try {
-          // Reload latest players to get accurate count
           await loadPlayers();
 
-          // Assign team with balanced distribution
+          // CHECK IF NAME ALREADY EXISTS IN DATABASE
+          const existingPlayer = allPlayers.find(
+            (player) => player.name.toLowerCase() === name.toLowerCase()
+          );
+
+          if (existingPlayer) {
+            showError(
+              "This name has already been registered! Please use a different name."
+            );
+            registerBtn.disabled = false;
+            registerBtn.textContent = "Pick a Team";
+            return;
+          }
+
+          registerBtn.textContent = "Assigning Team...";
+
           const assignedTeam = getBalancedTeam();
 
-          // Insert into Supabase
           const { data, error } = await supabase
             .from("players")
             .insert([
@@ -215,22 +232,26 @@
 
           if (error) throw error;
 
-          // Save to in-memory state
           currentPlayer = data;
-
-          // Update UI
           showSuccessMessage(data.name, data.team);
         } catch (error) {
           console.error("Error registering player:", error);
-          alert("Registration failed. Please try again.");
+          showError("Registration failed. Please try again.");
           registerBtn.disabled = false;
           registerBtn.textContent = "Pick a Team";
         }
       }
 
+      // ======== SHOW ERROR MESSAGE ========
+      function showError(message) {
+        errorMessage.style.display = "block";
+        successMessage.style.display = "none";
+        registrationForm.style.display = "block";
+        errorText.textContent = message;
+      }
+
       // ======== GET RANDOM TEAM ASSIGNMENT ========
       function getBalancedTeam() {
-        // Get current team counts
         const teamCounts = {};
         allPlayers.forEach((player) => {
           if (player.team) {
@@ -238,7 +259,6 @@
           }
         });
 
-        // Find teams that are NOT full yet
         const availableTeams = [];
         for (let i = 1; i <= MAX_TEAMS; i++) {
           const currentCount = teamCounts[i] || 0;
@@ -247,14 +267,12 @@
           }
         }
 
-        // If all teams are full, still allow assignment to any team
         if (availableTeams.length === 0) {
           for (let i = 1; i <= MAX_TEAMS; i++) {
             availableTeams.push(i);
           }
         }
 
-        // Return RANDOM team from available teams
         const randomIndex = Math.floor(Math.random() * availableTeams.length);
         return availableTeams[randomIndex];
       }
@@ -279,7 +297,6 @@
         totalRegisteredEl.textContent = totalPlayers;
         liveCountEl.textContent = liveUsers;
 
-        // Generate team cards dynamically
         renderTeamCards(teamCounts);
       }
 
@@ -302,7 +319,6 @@
 
         teamsDisplayEl.innerHTML = "";
 
-        // Sort team numbers
         const teamNumbers = Object.keys(teamCounts)
           .map(Number)
           .sort((a, b) => a - b);
@@ -332,6 +348,7 @@
       // ======== SHOW SUCCESS MESSAGE ========
       function showSuccessMessage(name, team) {
         registrationForm.style.display = "none";
+        errorMessage.style.display = "none";
         successMessage.style.display = "block";
         playerNameDisplay.textContent = name;
         teamBadge.textContent = `Team ${team}`;
