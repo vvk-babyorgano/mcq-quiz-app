@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Team Registration System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="pickteam.css" />
+    <link rel="stylesheet" href="style.css" />
     <link rel="icon" type="image/png" href="image/favicon.png" />
   </head>
   <body>
@@ -228,7 +228,7 @@
         }
       }
 
-      // ======== GET BALANCED TEAM ASSIGNMENT ========
+      // ======== GET RANDOM TEAM ASSIGNMENT ========
       function getBalancedTeam() {
         // Get current team counts
         const teamCounts = {};
@@ -238,26 +238,25 @@
           }
         });
 
-        // Initialize all MAX_TEAMS with count 0 if they don't exist
+        // Find teams that are NOT full yet
+        const availableTeams = [];
         for (let i = 1; i <= MAX_TEAMS; i++) {
-          if (!teamCounts[i]) {
-            teamCounts[i] = 0;
+          const currentCount = teamCounts[i] || 0;
+          if (currentCount < MAX_PLAYERS_PER_TEAM) {
+            availableTeams.push(i);
           }
         }
 
-        // Find the team with minimum players
-        let minTeam = 1;
-        let minCount = teamCounts[1];
-
-        for (let i = 2; i <= MAX_TEAMS; i++) {
-          if (teamCounts[i] < minCount) {
-            minCount = teamCounts[i];
-            minTeam = i;
+        // If all teams are full, still allow assignment to any team
+        if (availableTeams.length === 0) {
+          for (let i = 1; i <= MAX_TEAMS; i++) {
+            availableTeams.push(i);
           }
         }
 
-        // Return the team with fewest players
-        return minTeam;
+        // Return RANDOM team from available teams
+        const randomIndex = Math.floor(Math.random() * availableTeams.length);
+        return availableTeams[randomIndex];
       }
 
       // ======== GET TEAM COUNTS ========
