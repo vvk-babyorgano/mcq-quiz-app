@@ -106,6 +106,18 @@
         transform: none;
       }
 
+      .logout-btn {
+        background: #dc3545;
+        width: auto;
+        padding: 8px 20px;
+        font-size: 14px;
+        margin-top: 15px;
+      }
+
+      .logout-btn:hover {
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+      }
+
       .question-container {
         background: #f8f9fa;
         padding: 25px;
@@ -137,7 +149,6 @@
         gap: 12px;
       }
 
-      /* Multiple Choice Styles */
       .option-radio {
         display: flex;
         align-items: center;
@@ -172,7 +183,6 @@
         cursor: pointer;
       }
 
-      /* Checkbox Styles */
       .option-checkbox {
         display: flex;
         align-items: center;
@@ -249,6 +259,29 @@
         color: #333;
       }
 
+      .participant-info {
+        background: #e7f0ff;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .participant-details {
+        flex: 1;
+      }
+
+      .participant-details p {
+        margin: 5px 0;
+        color: #333;
+      }
+
+      .participant-details strong {
+        color: #667eea;
+      }
+
       .progress-bar {
         background: #ddd;
         height: 8px;
@@ -275,6 +308,12 @@
         button {
           padding: 10px 20px;
           font-size: 14px;
+        }
+
+        .participant-info {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
         }
       }
     </style>
@@ -319,6 +358,16 @@
 
         <!-- Quiz Section -->
         <div id="quizSection" class="section hidden">
+          <div class="participant-info" id="participantInfo">
+            <div class="participant-details">
+              <p><strong>Name:</strong> <span id="displayName"></span></p>
+              <p><strong>Department:</strong> <span id="displayDept"></span></p>
+            </div>
+            <button class="logout-btn" onclick="logoutParticipant()">
+              Change User
+            </button>
+          </div>
+
           <div id="statusMessage" class="status-message status-waiting">
             ⏳ Waiting for quiz to start...
           </div>
@@ -368,6 +417,13 @@
       let currentQuestionNumber = 0;
       let hasAnswered = false;
 
+      // localStorage keys
+      const STORAGE_KEYS = {
+        PARTICIPANT_ID: "quiz_participant_id",
+        PARTICIPANT_NAME: "quiz_participant_name",
+        PARTICIPANT_DEPT: "quiz_participant_dept",
+      };
+
       // Setup event listeners
       document
         .getElementById("registrationForm")
@@ -376,11 +432,49 @@
         .getElementById("submitBtn")
         .addEventListener("click", submitAnswer);
 
+      // Check if user is already registered on page load
+      window.addEventListener("DOMContentLoaded", checkExistingRegistration);
+
+      function checkExistingRegistration() {
+        const savedId = localStorage.getItem(STORAGE_KEYS.PARTICIPANT_ID);
+        const savedName = localStorage.getItem(STORAGE_KEYS.PARTICIPANT_NAME);
+        const savedDept = localStorage.getItem(STORAGE_KEYS.PARTICIPANT_DEPT);
+
+        if (savedId && savedName && savedDept) {
+          // User is already registered, skip registration form
+          participantId = savedId;
+
+          document.getElementById("displayName").textContent = savedName;
+          document.getElementById("displayDept").textContent = savedDept;
+
+          document
+            .getElementById("registrationSection")
+            .classList.add("hidden");
+          document.getElementById("quizSection").classList.remove("hidden");
+
+          setupRealtimeListeners();
+          loadQuizState();
+        } else {
+          // Pre-fill form if data exists but is incomplete
+          if (savedName) {
+            document.getElementById("participantName").value = savedName;
+          }
+          if (savedDept) {
+            document.getElementById("participantDept").value = savedDept;
+          }
+        }
+      }
+
       async function registerParticipant(e) {
         e.preventDefault();
 
-        const name = document.getElementById("participantName").value;
-        const dept = document.getElementById("participantDept").value;
+        const name = document.getElementById("participantName").value.trim();
+        const dept = document.getElementById("participantDept").value.trim();
+
+        if (!name || !dept) {
+          alert("Please fill in all fields");
+          return;
+        }
 
         const { data, error } = await supabase
           .from("participants")
@@ -399,11 +493,51 @@
         }
 
         participantId = data[0].id;
+
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEYS.PARTICIPANT_ID, participantId);
+        localStorage.setItem(STORAGE_KEYS.PARTICIPANT_NAME, name);
+        localStorage.setItem(STORAGE_KEYS.PARTICIPANT_DEPT, dept);
+
+        // Update display
+        document.getElementById("displayName").textContent = name;
+        document.getElementById("displayDept").textContent = dept;
+
         document.getElementById("registrationSection").classList.add("hidden");
         document.getElementById("quizSection").classList.remove("hidden");
 
         setupRealtimeListeners();
         loadQuizState();
+      }
+
+      function logoutParticipant() {
+        if (
+          confirm(
+            "Are you sure you want to change user? This will clear your registration."
+          )
+        ) {
+          // Clear localStorage
+          localStorage.removeItem(STORAGE_KEYS.PARTICIPANT_ID);
+          localStorage.removeItem(STORAGE_KEYS.PARTICIPANT_NAME);
+          localStorage.removeItem(STORAGE_KEYS.PARTICIPANT_DEPT);
+
+          // Reset variables
+          participantId = null;
+          currentQuestion = null;
+          selectedAnswer = null;
+          selectedAnswers = [];
+          hasAnswered = false;
+
+          // Show registration form
+          document.getElementById("quizSection").classList.add("hidden");
+          document
+            .getElementById("registrationSection")
+            .classList.remove("hidden");
+
+          // Clear form
+          document.getElementById("participantName").value = "";
+          document.getElementById("participantDept").value = "";
+        }
       }
 
       function setupRealtimeListeners() {
@@ -482,7 +616,6 @@
           "questionText"
         ).textContent = `Q${currentQuestion.question_number}: ${currentQuestion.question_text}`;
 
-        // Reset submit button and status when new question loads
         if (hasAnswered) {
           document.getElementById("submitBtn").disabled = true;
           document.getElementById("submitStatus").textContent =
@@ -510,6 +643,8 @@
           { label: "B", text: currentQuestion.option_b },
           { label: "C", text: currentQuestion.option_c },
           { label: "D", text: currentQuestion.option_d },
+          { label: "E", text: currentQuestion.option_e },
+          { label: "F", text: currentQuestion.option_f },
         ];
 
         const optionsHtml = options
@@ -525,7 +660,6 @@
 
         document.getElementById("optionsContainer").innerHTML = optionsHtml;
 
-        // Re-apply selected class if answer was already selected
         if (selectedAnswer && !hasAnswered) {
           document.querySelectorAll(".option-radio").forEach((el) => {
             if (el.getAttribute("data-value") === selectedAnswer) {
@@ -544,6 +678,8 @@
           { label: "B", text: currentQuestion.option_b },
           { label: "C", text: currentQuestion.option_c },
           { label: "D", text: currentQuestion.option_d },
+          { label: "E", text: currentQuestion.option_e },
+          { label: "F", text: currentQuestion.option_f },
         ];
 
         const optionsHtml = options
@@ -559,7 +695,6 @@
 
         document.getElementById("optionsContainer").innerHTML = optionsHtml;
 
-        // Re-apply selected class for checkboxes if already selected
         if (selectedAnswers.length > 0 && !hasAnswered) {
           selectedAnswers.forEach((answer) => {
             const label = document.querySelector(
@@ -576,7 +711,6 @@
       function selectOption(value) {
         selectedAnswer = value;
 
-        // Update UI - Remove selected class from all and add to clicked one
         document.querySelectorAll(".option-radio").forEach((el) => {
           if (el.getAttribute("data-value") === value) {
             el.classList.add("selected");
@@ -594,14 +728,12 @@
         );
         const checkbox = checkboxLabel.querySelector('input[type="checkbox"]');
 
-        // Update selected class based on checkbox state
         if (checkbox.checked) {
           checkboxLabel.classList.add("selected");
         } else {
           checkboxLabel.classList.remove("selected");
         }
 
-        // Update selectedAnswers array with checked checkboxes
         selectedAnswers = Array.from(
           document.querySelectorAll('input[name="answers"]:checked')
         ).map((el) => el.value);
@@ -670,7 +802,6 @@
           document.getElementById("submitStatus").textContent =
             "✓ You have already answered this question";
 
-          // Show which option was selected
           if (data.selected_answer) {
             document.querySelectorAll(".option-radio").forEach((el) => {
               if (el.getAttribute("data-value") === data.selected_answer) {
@@ -711,10 +842,7 @@
         status.textContent = message;
       }
 
-      // Load initial state
       setTimeout(loadQuizState, 500);
-
-      // Poll for state changes
       setInterval(loadQuizState, 3000);
     </script>
   </body>
