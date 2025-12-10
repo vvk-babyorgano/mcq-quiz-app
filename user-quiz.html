@@ -505,7 +505,7 @@
         const optionsHtml = options
           .map(
             (opt) => `
-                <label class="option-radio" onclick="selectOption('${opt.label}')">
+                <label class="option-radio" data-value="${opt.label}" onclick="selectOption('${opt.label}')">
                     <input type="radio" name="answer" value="${opt.label}">
                     <span class="option-label">${opt.label}) ${opt.text}</span>
                 </label>
@@ -529,7 +529,7 @@
         const optionsHtml = options
           .map(
             (opt) => `
-                <label class="option-checkbox" onclick="toggleCheckbox('${opt.label}')">
+                <label class="option-checkbox" data-value="${opt.label}" onclick="toggleCheckbox('${opt.label}')">
                     <input type="checkbox" name="answers" value="${opt.label}">
                     <span class="checkbox-label">${opt.label}) ${opt.text}</span>
                 </label>
@@ -543,15 +543,14 @@
       function selectOption(value) {
         selectedAnswer = value;
 
-        // Update UI
+        // Update UI - Remove selected class from all and add to clicked one
         document.querySelectorAll(".option-radio").forEach((el) => {
-          const radio = el.querySelector('input[type="radio"]');
-          if (radio.value === value) {
+          if (el.getAttribute("data-value") === value) {
             el.classList.add("selected");
-            radio.checked = true;
+            el.querySelector('input[type="radio"]').checked = true;
           } else {
             el.classList.remove("selected");
-            radio.checked = false;
+            el.querySelector('input[type="radio"]').checked = false;
           }
         });
 
@@ -559,23 +558,24 @@
       }
 
       function toggleCheckbox(value) {
-        const checkbox = document.querySelector(
-          `input[name="answers"][value="${value}"]`
+        const checkboxLabel = document.querySelector(
+          `.option-checkbox[data-value="${value}"]`
         );
+        const checkbox = checkboxLabel.querySelector('input[type="checkbox"]');
+
         checkbox.checked = !checkbox.checked;
 
+        // Update selected class based on checkbox state
+        if (checkbox.checked) {
+          checkboxLabel.classList.add("selected");
+        } else {
+          checkboxLabel.classList.remove("selected");
+        }
+
+        // Update selectedAnswers array
         selectedAnswers = Array.from(
           document.querySelectorAll('input[name="answers"]:checked')
         ).map((el) => el.value);
-
-        // Update UI
-        document.querySelectorAll(".option-checkbox").forEach((el) => {
-          if (el.querySelector('input[type="checkbox"]').checked) {
-            el.classList.add("selected");
-          } else {
-            el.classList.remove("selected");
-          }
-        });
 
         document.getElementById("submitStatus").textContent = "";
       }
@@ -624,12 +624,13 @@
         hasAnswered = true;
         document.getElementById("submitStatus").textContent =
           "✓ Answer submitted! Waiting for next question...";
+
+        // Keep the selected class visible and disable button
+        document.getElementById("submitBtn").disabled = true;
+
+        // Reset for next question when it loads
         selectedAnswer = null;
         selectedAnswers = [];
-
-        setTimeout(() => {
-          document.getElementById("submitBtn").disabled = true;
-        }, 500);
       }
 
       async function checkIfAnswered() {
