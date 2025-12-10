@@ -482,6 +482,16 @@
           "questionText"
         ).textContent = `Q${currentQuestion.question_number}: ${currentQuestion.question_text}`;
 
+        // Reset submit button and status when new question loads
+        if (hasAnswered) {
+          document.getElementById("submitBtn").disabled = true;
+          document.getElementById("submitStatus").textContent =
+            "✓ Already answered";
+        } else {
+          document.getElementById("submitBtn").disabled = false;
+          document.getElementById("submitStatus").textContent = "";
+        }
+
         if (currentQuestion.question_type === "multiple_choice") {
           displayMultipleChoice();
         } else if (currentQuestion.question_type === "checkbox") {
@@ -505,8 +515,8 @@
         const optionsHtml = options
           .map(
             (opt) => `
-                <label class="option-radio" data-value="${opt.label}" onclick="selectOption('${opt.label}')">
-                    <input type="radio" name="answer" value="${opt.label}">
+                <label class="option-radio" data-value="${opt.label}">
+                    <input type="radio" name="answer" value="${opt.label}" onchange="selectOption('${opt.label}')">
                     <span class="option-label">${opt.label}) ${opt.text}</span>
                 </label>
             `
@@ -514,6 +524,16 @@
           .join("");
 
         document.getElementById("optionsContainer").innerHTML = optionsHtml;
+
+        // Re-apply selected class if answer was already selected
+        if (selectedAnswer && !hasAnswered) {
+          document.querySelectorAll(".option-radio").forEach((el) => {
+            if (el.getAttribute("data-value") === selectedAnswer) {
+              el.classList.add("selected");
+              el.querySelector('input[type="radio"]').checked = true;
+            }
+          });
+        }
       }
 
       function displayCheckbox() {
@@ -529,8 +549,8 @@
         const optionsHtml = options
           .map(
             (opt) => `
-                <label class="option-checkbox" data-value="${opt.label}" onclick="toggleCheckbox('${opt.label}')">
-                    <input type="checkbox" name="answers" value="${opt.label}">
+                <label class="option-checkbox" data-value="${opt.label}">
+                    <input type="checkbox" name="answers" value="${opt.label}" onchange="toggleCheckbox('${opt.label}')">
                     <span class="checkbox-label">${opt.label}) ${opt.text}</span>
                 </label>
             `
@@ -538,6 +558,19 @@
           .join("");
 
         document.getElementById("optionsContainer").innerHTML = optionsHtml;
+
+        // Re-apply selected class for checkboxes if already selected
+        if (selectedAnswers.length > 0 && !hasAnswered) {
+          selectedAnswers.forEach((answer) => {
+            const label = document.querySelector(
+              `.option-checkbox[data-value="${answer}"]`
+            );
+            if (label) {
+              label.classList.add("selected");
+              label.querySelector('input[type="checkbox"]').checked = true;
+            }
+          });
+        }
       }
 
       function selectOption(value) {
@@ -547,10 +580,8 @@
         document.querySelectorAll(".option-radio").forEach((el) => {
           if (el.getAttribute("data-value") === value) {
             el.classList.add("selected");
-            el.querySelector('input[type="radio"]').checked = true;
           } else {
             el.classList.remove("selected");
-            el.querySelector('input[type="radio"]').checked = false;
           }
         });
 
@@ -563,8 +594,6 @@
         );
         const checkbox = checkboxLabel.querySelector('input[type="checkbox"]');
 
-        checkbox.checked = !checkbox.checked;
-
         // Update selected class based on checkbox state
         if (checkbox.checked) {
           checkboxLabel.classList.add("selected");
@@ -572,7 +601,7 @@
           checkboxLabel.classList.remove("selected");
         }
 
-        // Update selectedAnswers array
+        // Update selectedAnswers array with checked checkboxes
         selectedAnswers = Array.from(
           document.querySelectorAll('input[name="answers"]:checked')
         ).map((el) => el.value);
@@ -624,13 +653,7 @@
         hasAnswered = true;
         document.getElementById("submitStatus").textContent =
           "✓ Answer submitted! Waiting for next question...";
-
-        // Keep the selected class visible and disable button
         document.getElementById("submitBtn").disabled = true;
-
-        // Reset for next question when it loads
-        selectedAnswer = null;
-        selectedAnswers = [];
       }
 
       async function checkIfAnswered() {
@@ -646,6 +669,29 @@
           document.getElementById("submitBtn").disabled = true;
           document.getElementById("submitStatus").textContent =
             "✓ You have already answered this question";
+
+          // Show which option was selected
+          if (data.selected_answer) {
+            document.querySelectorAll(".option-radio").forEach((el) => {
+              if (el.getAttribute("data-value") === data.selected_answer) {
+                el.classList.add("selected");
+                el.querySelector('input[type="radio"]').checked = true;
+              }
+            });
+          }
+
+          if (data.selected_answers) {
+            const answers = data.selected_answers.split(",");
+            answers.forEach((answer) => {
+              const label = document.querySelector(
+                `.option-checkbox[data-value="${answer}"]`
+              );
+              if (label) {
+                label.classList.add("selected");
+                label.querySelector('input[type="checkbox"]').checked = true;
+              }
+            });
+          }
         } else {
           hasAnswered = false;
           document.getElementById("submitBtn").disabled = false;
