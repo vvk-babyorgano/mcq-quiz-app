@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClickUp Quiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2em;
+        margin-bottom: 10px;
+      }
+
+      .content {
+        padding: 40px;
+      }
+
+      .section {
+        margin-bottom: 30px;
+      }
+
+      .section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.3em;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 600;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        font-family: inherit;
+        transition: border-color 0.3s;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .question-container {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+      }
+
+      .question-text {
+        font-size: 1.2em;
+        color: #333;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      .question-type-badge {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.75em;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      /* Multiple Choice Styles */
+      .option-radio {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .option-radio:hover {
+        border-color: #667eea;
+        background: #f0f2ff;
+      }
+
+      .option-radio input[type="radio"] {
+        width: auto;
+        margin-right: 12px;
+        cursor: pointer;
+      }
+
+      .option-radio.selected {
+        background: #e7f0ff;
+        border-color: #667eea;
+      }
+
+      .option-label {
+        font-weight: 500;
+        color: #333;
+        flex: 1;
+        cursor: pointer;
+      }
+
+      /* Checkbox Styles */
+      .option-checkbox {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .option-checkbox:hover {
+        border-color: #667eea;
+        background: #f0f2ff;
+      }
+
+      .option-checkbox input[type="checkbox"] {
+        width: auto;
+        margin-right: 12px;
+        cursor: pointer;
+      }
+
+      .option-checkbox.selected {
+        background: #e7f0ff;
+        border-color: #667eea;
+      }
+
+      .checkbox-label {
+        font-weight: 500;
+        color: #333;
+        flex: 1;
+        cursor: pointer;
+      }
+
+      .status-message {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .status-waiting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-active {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-submitted {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .form-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+      }
+
+      .info-box {
+        background: #e7f0ff;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #667eea;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .progress-bar {
+        background: #ddd;
+        height: 8px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100%;
+        transition: width 0.3s;
+      }
+
+      @media (max-width: 600px) {
+        .header h1 {
+          font-size: 1.5em;
+        }
+
+        .content {
+          padding: 20px;
+        }
+
+        button {
+          padding: 10px 20px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎯 ClickUp Quiz</h1>
+        <p>Test your knowledge</p>
+      </div>
+
+      <div class="content">
+        <!-- Registration Form -->
+        <div id="registrationSection" class="section">
+          <div class="form-section">
+            <h2>Register to Start Quiz</h2>
+            <form id="registrationForm">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input
+                  type="text"
+                  id="participantName"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Department *</label>
+                <input
+                  type="text"
+                  id="participantDept"
+                  placeholder="Enter your department"
+                  required
+                />
+              </div>
+
+              <button type="submit">Join Quiz</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <div id="quizSection" class="section hidden">
+          <div id="statusMessage" class="status-message status-waiting">
+            ⏳ Waiting for quiz to start...
+          </div>
+
+          <div id="questionSection" class="hidden">
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                id="progressFill"
+                style="width: 0%"
+              ></div>
+            </div>
+
+            <div class="question-container">
+              <span class="question-type-badge" id="typeBadge"></span>
+              <div class="question-text" id="questionText"></div>
+              <div class="options" id="optionsContainer"></div>
+            </div>
+
+            <button id="submitBtn" style="margin-top: 20px">
+              Submit Answer
+            </button>
+            <div
+              id="submitStatus"
+              style="margin-top: 10px; text-align: center; color: #666"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const supabaseUrl = "https://ggyusywsblhyrhbtpupt.supabase.co";
+      const supabaseAnonKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneXVzeXdzYmxoeXJoYnRwdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxNjk1NDAsImV4cCI6MjA2ODc0NTU0MH0.HJyFrT9zm7qC2sQJN9WmubEOzauEU08OrclkkowoAl0";
+      const supabase = window.supabase.createClient(
+        supabaseUrl,
+        supabaseAnonKey
+      );
+
+      let participantId = null;
+      let currentQuestion = null;
+      let selectedAnswer = null;
+      let selectedAnswers = [];
+      let quizActive = false;
+      let questionsTotal = 0;
+      let currentQuestionNumber = 0;
+      let hasAnswered = false;
+
+      // Setup event listeners
+      document
+        .getElementById("registrationForm")
+        .addEventListener("submit", registerParticipant);
+      document
+        .getElementById("submitBtn")
+        .addEventListener("click", submitAnswer);
+
+      async function registerParticipant(e) {
+        e.preventDefault();
+
+        const name = document.getElementById("participantName").value;
+        const dept = document.getElementById("participantDept").value;
+
+        const { data, error } = await supabase
+          .from("participants")
+          .insert([
+            {
+              name: name,
+              department: dept,
+              created_at: new Date().toISOString(),
+            },
+          ])
+          .select();
+
+        if (error) {
+          alert("Error registering: " + error.message);
+          return;
+        }
+
+        participantId = data[0].id;
+        document.getElementById("registrationSection").classList.add("hidden");
+        document.getElementById("quizSection").classList.remove("hidden");
+
+        setupRealtimeListeners();
+        loadQuizState();
+      }
+
+      function setupRealtimeListeners() {
+        supabase
+          .channel("quiz_state_user")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "quiz_state" },
+            () => {
+              loadQuizState();
+            }
+          )
+          .subscribe();
+      }
+
+      async function loadQuizState() {
+        const { data, error } = await supabase
+          .from("quiz_state")
+          .select("*")
+          .eq("id", 1)
+          .single();
+
+        if (error || !data) {
+          updateStatus("⏳ Waiting for quiz to start...");
+          document.getElementById("questionSection").classList.add("hidden");
+          return;
+        }
+
+        quizActive = data.is_active;
+
+        if (quizActive && data.current_question_id) {
+          loadCurrentQuestion(data.current_question_id);
+        } else {
+          updateStatus(
+            quizActive ? "Quiz paused..." : "⏳ Waiting for quiz to start..."
+          );
+          document.getElementById("questionSection").classList.add("hidden");
+        }
+      }
+
+      async function loadCurrentQuestion(questionId) {
+        const { data, error } = await supabase
+          .from("questions")
+          .select("*")
+          .eq("id", questionId)
+          .single();
+
+        if (error) {
+          console.error("Error loading question:", error);
+          return;
+        }
+
+        currentQuestion = data;
+        questionsTotal = await getQuestionsCount();
+        currentQuestionNumber = data.question_number;
+
+        displayQuestion();
+        updateStatus("✓ Quiz Active - Answer the question");
+        document.getElementById("questionSection").classList.remove("hidden");
+
+        checkIfAnswered();
+      }
+
+      async function getQuestionsCount() {
+        const { count } = await supabase
+          .from("questions")
+          .select("*", { count: "exact" });
+
+        return count || 0;
+      }
+
+      function displayQuestion() {
+        if (!currentQuestion) return;
+
+        document.getElementById(
+          "questionText"
+        ).textContent = `Q${currentQuestion.question_number}: ${currentQuestion.question_text}`;
+
+        if (currentQuestion.question_type === "multiple_choice") {
+          displayMultipleChoice();
+        } else if (currentQuestion.question_type === "checkbox") {
+          displayCheckbox();
+        }
+
+        const progress = (currentQuestionNumber / questionsTotal) * 100;
+        document.getElementById("progressFill").style.width = progress + "%";
+      }
+
+      function displayMultipleChoice() {
+        document.getElementById("typeBadge").textContent = "◯ Multiple Choice";
+
+        const options = [
+          { label: "A", text: currentQuestion.option_a },
+          { label: "B", text: currentQuestion.option_b },
+          { label: "C", text: currentQuestion.option_c },
+          { label: "D", text: currentQuestion.option_d },
+        ];
+
+        const optionsHtml = options
+          .map(
+            (opt) => `
+                <label class="option-radio" onclick="selectOption('${opt.label}')">
+                    <input type="radio" name="answer" value="${opt.label}">
+                    <span class="option-label">${opt.label}) ${opt.text}</span>
+                </label>
+            `
+          )
+          .join("");
+
+        document.getElementById("optionsContainer").innerHTML = optionsHtml;
+      }
+
+      function displayCheckbox() {
+        document.getElementById("typeBadge").textContent = "☑ Select Multiple";
+
+        const options = [
+          { label: "A", text: currentQuestion.option_a },
+          { label: "B", text: currentQuestion.option_b },
+          { label: "C", text: currentQuestion.option_c },
+          { label: "D", text: currentQuestion.option_d },
+        ];
+
+        const optionsHtml = options
+          .map(
+            (opt) => `
+                <label class="option-checkbox" onclick="toggleCheckbox('${opt.label}')">
+                    <input type="checkbox" name="answers" value="${opt.label}">
+                    <span class="checkbox-label">${opt.label}) ${opt.text}</span>
+                </label>
+            `
+          )
+          .join("");
+
+        document.getElementById("optionsContainer").innerHTML = optionsHtml;
+      }
+
+      function selectOption(value) {
+        selectedAnswer = value;
+
+        // Update UI
+        document.querySelectorAll(".option-radio").forEach((el) => {
+          const radio = el.querySelector('input[type="radio"]');
+          if (radio.value === value) {
+            el.classList.add("selected");
+            radio.checked = true;
+          } else {
+            el.classList.remove("selected");
+            radio.checked = false;
+          }
+        });
+
+        document.getElementById("submitStatus").textContent = "";
+      }
+
+      function toggleCheckbox(value) {
+        const checkbox = document.querySelector(
+          `input[name="answers"][value="${value}"]`
+        );
+        checkbox.checked = !checkbox.checked;
+
+        selectedAnswers = Array.from(
+          document.querySelectorAll('input[name="answers"]:checked')
+        ).map((el) => el.value);
+
+        // Update UI
+        document.querySelectorAll(".option-checkbox").forEach((el) => {
+          if (el.querySelector('input[type="checkbox"]').checked) {
+            el.classList.add("selected");
+          } else {
+            el.classList.remove("selected");
+          }
+        });
+
+        document.getElementById("submitStatus").textContent = "";
+      }
+
+      async function submitAnswer() {
+        if (
+          currentQuestion.question_type === "multiple_choice" &&
+          !selectedAnswer
+        ) {
+          alert("Please select an option");
+          return;
+        }
+
+        if (
+          currentQuestion.question_type === "checkbox" &&
+          selectedAnswers.length === 0
+        ) {
+          alert("Please select at least one option");
+          return;
+        }
+
+        document.getElementById("submitBtn").disabled = true;
+        document.getElementById("submitStatus").textContent = "Submitting...";
+
+        const insertData = {
+          participant_id: participantId,
+          question_id: currentQuestion.id,
+          created_at: new Date().toISOString(),
+        };
+
+        if (currentQuestion.question_type === "multiple_choice") {
+          insertData.selected_answer = selectedAnswer;
+        } else if (currentQuestion.question_type === "checkbox") {
+          insertData.selected_answers = selectedAnswers.join(",");
+        }
+
+        const { error } = await supabase.from("responses").insert([insertData]);
+
+        if (error) {
+          alert("Error submitting answer: " + error.message);
+          document.getElementById("submitBtn").disabled = false;
+          document.getElementById("submitStatus").textContent = "";
+          return;
+        }
+
+        hasAnswered = true;
+        document.getElementById("submitStatus").textContent =
+          "✓ Answer submitted! Waiting for next question...";
+        selectedAnswer = null;
+        selectedAnswers = [];
+
+        setTimeout(() => {
+          document.getElementById("submitBtn").disabled = true;
+        }, 500);
+      }
+
+      async function checkIfAnswered() {
+        const { data } = await supabase
+          .from("responses")
+          .select("*")
+          .eq("participant_id", participantId)
+          .eq("question_id", currentQuestion.id)
+          .single();
+
+        if (data) {
+          hasAnswered = true;
+          document.getElementById("submitBtn").disabled = true;
+          document.getElementById("submitStatus").textContent =
+            "✓ You have already answered this question";
+        } else {
+          hasAnswered = false;
+          document.getElementById("submitBtn").disabled = false;
+          document.getElementById("submitStatus").textContent = "";
+        }
+      }
+
+      function updateStatus(message) {
+        const status = document.getElementById("statusMessage");
+        if (message.includes("⏳")) {
+          status.className = "status-message status-waiting";
+        } else if (message.includes("✓")) {
+          status.className = "status-message status-active";
+        } else {
+          status.className = "status-message status-submitted";
+        }
+        status.textContent = message;
+      }
+
+      // Load initial state
+      setTimeout(loadQuizState, 500);
+
+      // Poll for state changes
+      setInterval(loadQuizState, 3000);
+    </script>
+  </body>
+</html>

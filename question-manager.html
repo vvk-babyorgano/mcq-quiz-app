@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Question Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+
+      .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .panel {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        font-size: 1.2em;
+        font-weight: 600;
+      }
+
+      .panel-content {
+        padding: 25px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.3s;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-delete {
+        background: #dc3545;
+        padding: 8px 12px;
+        font-size: 12px;
+        width: auto;
+      }
+
+      .btn-delete:hover {
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+      }
+
+      .type-indicator {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75em;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .type-multiple {
+        background: #e7f0ff;
+        color: #667eea;
+      }
+
+      .type-checkbox {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .question-item {
+        background: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+      }
+
+      .question-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .question-number {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 0.9em;
+        margin-bottom: 8px;
+      }
+
+      .question-text {
+        color: #333;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+
+      .options-list {
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 8px 0;
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      .options-list p {
+        margin: 4px 0;
+        margin-left: 10px;
+      }
+
+      .correct-answer-info {
+        background: #d4edda;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        color: #155724;
+        margin-top: 8px;
+        font-weight: 500;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .action-buttons button {
+        flex: 1;
+      }
+
+      .section-note {
+        background: #e7f0ff;
+        padding: 10px;
+        border-radius: 5px;
+        border-left: 4px solid #667eea;
+        color: #667eea;
+        font-size: 0.9em;
+        margin-bottom: 15px;
+      }
+
+      .checkbox-group {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+
+      .checkbox-item {
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .checkbox-item input[type="checkbox"] {
+        width: auto;
+        margin-right: 10px;
+        cursor: pointer;
+      }
+
+      .checkbox-item label {
+        margin: 0;
+        font-weight: normal;
+        cursor: pointer;
+        flex: 1;
+      }
+
+      .questions-count {
+        text-align: center;
+        padding: 10px;
+        background: #e7f0ff;
+        border-radius: 5px;
+        color: #667eea;
+        font-weight: 600;
+        margin-top: 15px;
+      }
+
+      .empty-message {
+        color: #999;
+        text-align: center;
+        padding: 30px 20px;
+        font-style: italic;
+      }
+
+      @media (max-width: 768px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+          font-size: 1.8em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📝 Quiz Question Manager</h1>
+        <p>Add and manage quiz questions before the live session</p>
+      </div>
+
+      <div class="main-grid">
+        <!-- Add Question Panel -->
+        <div class="panel">
+          <div class="panel-header">➕ Add New Question</div>
+          <div class="panel-content">
+            <form id="questionForm">
+              <div class="form-group">
+                <label>Question Type *</label>
+                <select
+                  id="questionType"
+                  required
+                  onchange="updateTypeDisplay()"
+                >
+                  <option value="">Select Type</option>
+                  <option value="multiple_choice">
+                    Multiple Choice (Single Answer)
+                  </option>
+                  <option value="checkbox">Checkbox (Multiple Answers)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Question Text *</label>
+                <textarea
+                  id="questionText"
+                  placeholder="Enter your question"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Option A *</label>
+                <input
+                  type="text"
+                  id="optionA"
+                  placeholder="Option A"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Option B *</label>
+                <input
+                  type="text"
+                  id="optionB"
+                  placeholder="Option B"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Option C *</label>
+                <input
+                  type="text"
+                  id="optionC"
+                  placeholder="Option C"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Option D *</label>
+                <input
+                  type="text"
+                  id="optionD"
+                  placeholder="Option D"
+                  required
+                />
+              </div>
+
+              <!-- Multiple Choice Answer -->
+              <div id="multipleChoiceSection" class="form-group hidden">
+                <label>Correct Answer *</label>
+                <select id="correctAnswer">
+                  <option value="">Select correct answer</option>
+                  <option value="A">Option A</option>
+                  <option value="B">Option B</option>
+                  <option value="C">Option C</option>
+                  <option value="D">Option D</option>
+                </select>
+              </div>
+
+              <!-- Checkbox Correct Answers -->
+              <div id="checkboxSection" class="form-group hidden">
+                <label>Select Correct Answers *</label>
+                <div class="checkbox-group">
+                  <div class="checkbox-item">
+                    <input type="checkbox" id="checkboxA" value="A" />
+                    <label for="checkboxA">Option A</label>
+                  </div>
+                  <div class="checkbox-item">
+                    <input type="checkbox" id="checkboxB" value="B" />
+                    <label for="checkboxB">Option B</label>
+                  </div>
+                  <div class="checkbox-item">
+                    <input type="checkbox" id="checkboxC" value="C" />
+                    <label for="checkboxC">Option C</label>
+                  </div>
+                  <div class="checkbox-item">
+                    <input type="checkbox" id="checkboxD" value="D" />
+                    <label for="checkboxD">Option D</label>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit">Add Question</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Questions List Panel -->
+        <div class="panel">
+          <div class="panel-header">📋 Questions Added</div>
+          <div class="panel-content">
+            <div id="questionsList" class="empty-message">
+              No questions added yet. Add your first question to get started.
+            </div>
+            <div
+              class="questions-count"
+              id="questionsCount"
+              style="display: none"
+            >
+              Total: <span id="totalCount">0</span> Questions
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const supabaseUrl = "https://ggyusywsblhyrhbtpupt.supabase.co";
+      const supabaseAnonKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneXVzeXdzYmxoeXJoYnRwdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxNjk1NDAsImV4cCI6MjA2ODc0NTU0MH0.HJyFrT9zm7qC2sQJN9WmubEOzauEU08OrclkkowoAl0";
+      const supabase = window.supabase.createClient(
+        supabaseUrl,
+        supabaseAnonKey
+      );
+
+      let questions = [];
+
+      // Event Listeners
+      document
+        .getElementById("questionForm")
+        .addEventListener("submit", addQuestion);
+
+      // Load questions on page load
+      loadQuestions();
+
+      function updateTypeDisplay() {
+        const type = document.getElementById("questionType").value;
+        const multipleSection = document.getElementById(
+          "multipleChoiceSection"
+        );
+        const checkboxSection = document.getElementById("checkboxSection");
+
+        if (type === "multiple_choice") {
+          multipleSection.classList.remove("hidden");
+          checkboxSection.classList.add("hidden");
+        } else if (type === "checkbox") {
+          multipleSection.classList.add("hidden");
+          checkboxSection.classList.remove("hidden");
+        } else {
+          multipleSection.classList.add("hidden");
+          checkboxSection.classList.add("hidden");
+        }
+      }
+
+      async function addQuestion(e) {
+        e.preventDefault();
+
+        const type = document.getElementById("questionType").value;
+        if (!type) {
+          alert("Please select a question type");
+          return;
+        }
+
+        const questionData = {
+          question_text: document.getElementById("questionText").value,
+          option_a: document.getElementById("optionA").value,
+          option_b: document.getElementById("optionB").value,
+          option_c: document.getElementById("optionC").value,
+          option_d: document.getElementById("optionD").value,
+          question_type: type,
+          question_number: questions.length + 1,
+          created_at: new Date().toISOString(),
+        };
+
+        // Handle correct answer based on type
+        if (type === "multiple_choice") {
+          questionData.correct_answer =
+            document.getElementById("correctAnswer").value;
+          if (!questionData.correct_answer) {
+            alert("Please select the correct answer");
+            return;
+          }
+        } else if (type === "checkbox") {
+          const checked = Array.from(
+            document.querySelectorAll(
+              '#checkboxSection input[type="checkbox"]:checked'
+            )
+          ).map((el) => el.value);
+
+          if (checked.length === 0) {
+            alert("Please select at least one correct answer");
+            return;
+          }
+          questionData.correct_answers = checked.join(",");
+        }
+
+        const { error } = await supabase
+          .from("questions")
+          .insert([questionData]);
+
+        if (error) {
+          alert("Error adding question: " + error.message);
+          return;
+        }
+
+        // Reset form and reload
+        document.getElementById("questionForm").reset();
+        updateTypeDisplay();
+        loadQuestions();
+      }
+
+      async function loadQuestions() {
+        const { data, error } = await supabase
+          .from("questions")
+          .select("*")
+          .order("question_number", { ascending: true });
+
+        if (error) {
+          console.error("Error loading questions:", error);
+          return;
+        }
+
+        questions = data || [];
+        displayQuestions();
+      }
+
+      function displayQuestions() {
+        const list = document.getElementById("questionsList");
+        const countEl = document.getElementById("questionsCount");
+
+        if (questions.length === 0) {
+          list.innerHTML =
+            '<div class="empty-message">No questions added yet. Add your first question to get started.</div>';
+          countEl.style.display = "none";
+          return;
+        }
+
+        countEl.style.display = "block";
+        document.getElementById("totalCount").textContent = questions.length;
+
+        list.innerHTML = questions
+          .map((q) => {
+            let correctInfo = "";
+            let typeBadge = "";
+
+            if (q.question_type === "multiple_choice") {
+              typeBadge =
+                '<span class="type-indicator type-multiple">◯ Multiple Choice</span>';
+              correctInfo = `<div class="correct-answer-info">Correct Answer: <strong>${q.correct_answer}</strong></div>`;
+            } else if (q.question_type === "checkbox") {
+              typeBadge =
+                '<span class="type-indicator type-checkbox">☑ Checkbox</span>';
+              const answers = q.correct_answers
+                ? q.correct_answers.split(",")
+                : [];
+              correctInfo = `<div class="correct-answer-info">Correct Answers: <strong>${answers.join(
+                ", "
+              )}</strong></div>`;
+            }
+
+            return `
+                    <div class="question-item">
+                        <div class="question-number">Q${q.question_number} ${typeBadge}</div>
+                        <div class="question-text">${q.question_text}</div>
+                        <div class="options-list">
+                            <p><strong>A)</strong> ${q.option_a}</p>
+                            <p><strong>B)</strong> ${q.option_b}</p>
+                            <p><strong>C)</strong> ${q.option_c}</p>
+                            <p><strong>D)</strong> ${q.option_d}</p>
+                        </div>
+                        ${correctInfo}
+                        <div class="action-buttons">
+                            <button class="btn-delete" onclick="deleteQuestion(${q.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+          })
+          .join("");
+      }
+
+      async function deleteQuestion(id) {
+        if (!confirm("Are you sure you want to delete this question?")) return;
+
+        const { error } = await supabase
+          .from("questions")
+          .delete()
+          .eq("id", id);
+
+        if (error) {
+          alert("Error deleting question: " + error.message);
+          return;
+        }
+
+        loadQuestions();
+      }
+    </script>
+  </body>
+</html>
