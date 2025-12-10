@@ -21,7 +21,7 @@
       }
 
       .container {
-        max-width: 1400px;
+        max-width: 1600px;
         margin: 0 auto;
       }
 
@@ -41,7 +41,7 @@
 
       .main-content {
         display: grid;
-        grid-template-columns: 300px 1fr;
+        grid-template-columns: 280px 1fr;
         gap: 20px;
         margin-top: 20px;
       }
@@ -60,14 +60,10 @@
         margin-bottom: 25px;
       }
 
-      .sidebar-section:last-child {
-        margin-bottom: 0;
-      }
-
       .sidebar h3 {
         color: #333;
         margin-bottom: 15px;
-        font-size: 1.1em;
+        font-size: 1em;
         border-bottom: 2px solid #667eea;
         padding-bottom: 10px;
       }
@@ -81,10 +77,7 @@
         cursor: pointer;
         font-weight: 600;
         transition: all 0.3s;
-      }
-
-      .quiz-control-btn:last-child {
-        margin-bottom: 0;
+        font-size: 0.9em;
       }
 
       .start-btn {
@@ -157,14 +150,14 @@
       }
 
       .stat-label {
-        font-size: 0.8em;
+        font-size: 0.75em;
         color: #666;
         margin-top: 5px;
       }
 
       .main-area {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 20px;
       }
 
@@ -179,14 +172,44 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 20px;
-        font-size: 1.2em;
+        font-size: 1.1em;
         font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
       .panel-content {
         padding: 20px;
-        max-height: 700px;
+        max-height: 800px;
         overflow-y: auto;
+      }
+
+      .questions-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+      }
+
+      .question-tab {
+        padding: 10px 15px;
+        background: #f0f0f0;
+        border: 2px solid transparent;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        white-space: nowrap;
+      }
+
+      .question-tab:hover {
+        background: #e7e7e7;
+      }
+
+      .question-tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
       }
 
       .question-display {
@@ -200,6 +223,7 @@
       .question-display h3 {
         color: #333;
         margin-bottom: 10px;
+        font-size: 1.1em;
       }
 
       .question-display p {
@@ -217,19 +241,17 @@
       .response-item {
         background: #f8f9fa;
         padding: 15px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         border-radius: 5px;
         border-left: 4px solid #667eea;
-      }
-
-      .response-item:last-child {
-        margin-bottom: 0;
       }
 
       .response-header {
         font-weight: 600;
         color: #333;
         margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
       }
 
       .response-detail {
@@ -240,7 +262,7 @@
 
       .response-answer {
         background: #e7f0ff;
-        padding: 8px 12px;
+        padding: 10px 12px;
         border-radius: 4px;
         margin-top: 8px;
         font-weight: 500;
@@ -268,10 +290,6 @@
         border-left: 4px solid #667eea;
       }
 
-      .participant-item:last-child {
-        margin-bottom: 0;
-      }
-
       .participant-info {
         flex: 1;
       }
@@ -294,62 +312,28 @@
         font-weight: 600;
       }
 
-      .status-pending {
-        background: #fff3cd;
-        color: #856404;
-      }
-
       .status-answered {
         background: #d4edda;
         color: #155724;
       }
 
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
       .empty-message {
         color: #999;
         text-align: center;
-        padding: 30px 20px;
+        padding: 40px 20px;
         font-style: italic;
-      }
-
-      .full-width {
-        grid-column: 1 / -1;
-      }
-
-      .btn-group {
-        display: flex;
-        gap: 10px;
-        margin-top: 15px;
-      }
-
-      .btn-group button {
-        flex: 1;
-      }
-
-      @media (max-width: 1200px) {
-        .main-area {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .main-content {
-          grid-template-columns: 1fr;
-        }
-
-        .sidebar {
-          position: static;
-        }
-      }
-
-      .checkbox-item {
-        margin: 8px 0;
       }
 
       .checkbox-item label {
         display: flex;
         align-items: center;
         font-weight: normal;
-        margin: 0;
+        margin: 8px 0;
       }
 
       .checkbox-item input[type="checkbox"] {
@@ -367,13 +351,57 @@
         margin-bottom: 10px;
         font-weight: 600;
       }
+
+      .response-stats {
+        background: #e7f0ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+      }
+
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .stat-row:last-child {
+        border-bottom: none;
+      }
+
+      .button-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85em;
+      }
+
+      .button-primary:hover {
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      @media (max-width: 1200px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
         <h1>📊 Quiz Admin Dashboard</h1>
-        <p>Manage and Track Quiz in Real-Time</p>
+        <p>Manage and Track Quiz Responses in Real-Time</p>
       </div>
 
       <div class="main-content">
@@ -384,15 +412,14 @@
             <div class="quiz-status status-inactive" id="quizStatus">
               ⏹ INACTIVE
             </div>
-
             <div class="stats-container">
               <div class="stat-box">
                 <div class="stat-number" id="participantCount">0</div>
                 <div class="stat-label">Participants</div>
               </div>
               <div class="stat-box">
-                <div class="stat-number" id="answeredCount">0</div>
-                <div class="stat-label">Answered</div>
+                <div class="stat-number" id="totalQuestions">0</div>
+                <div class="stat-label">Questions</div>
               </div>
             </div>
           </div>
@@ -417,14 +444,14 @@
                 background: #f8f9fa;
                 padding: 10px;
                 border-radius: 5px;
+                text-align: center;
                 font-weight: 600;
                 color: #667eea;
-                text-align: center;
               "
             >
-              <div id="currentQNum">0</div>
-              <div style="font-size: 0.8em; color: #666; margin-top: 5px">
-                Question #
+              <div id="currentQNum" style="font-size: 2em">0</div>
+              <div style="font-size: 0.75em; color: #666; margin-top: 5px">
+                of <span id="totalQNum">0</span>
               </div>
             </div>
           </div>
@@ -432,47 +459,37 @@
 
         <!-- Main Area -->
         <div class="main-area">
-          <!-- Current Question Panel -->
+          <!-- Questions Selector -->
           <div class="panel">
-            <div class="panel-header">📝 Current Question</div>
+            <div class="panel-header">📋 Questions</div>
             <div class="panel-content">
-              <div id="currentQuestionDisplay" class="empty-message">
-                No question selected. Start quiz to display.
-              </div>
+              <div class="questions-tabs" id="questionsTabs"></div>
             </div>
           </div>
 
-          <!-- Participants Panel -->
+          <!-- Current Question & Responses -->
           <div class="panel">
-            <div class="panel-header">👥 Participants</div>
-            <div class="panel-content">
-              <div id="participantsList" class="empty-message">
-                Waiting for participants to join...
-              </div>
-            </div>
-          </div>
-
-          <!-- Responses Panel (Full Width) -->
-          <div class="panel full-width">
             <div class="panel-header">
-              📊 Current Question Responses
-              <button
-                id="toggleAnswersBtn"
-                style="
-                  float: right;
-                  padding: 6px 12px;
-                  font-size: 0.9em;
-                  width: auto;
-                  margin: 0;
-                "
-              >
+              📝 Question & Responses
+              <button class="button-primary" id="toggleAnswersBtn">
                 👁 Show Answers
               </button>
             </div>
             <div class="panel-content">
-              <div id="responsesList" class="empty-message">
-                No responses yet. Questions and answers will appear here.
-              </div>
+              <div id="currentQuestionDisplay"></div>
+              <div id="responseStatsSection" style="display: none"></div>
+              <h4 style="margin-top: 20px; margin-bottom: 15px; color: #333">
+                All Responses:
+              </h4>
+              <div id="responsesList"></div>
+            </div>
+          </div>
+
+          <!-- Participants -->
+          <div class="panel">
+            <div class="panel-header">👥 Participants & Progress</div>
+            <div class="panel-content">
+              <div id="participantsList"></div>
             </div>
           </div>
         </div>
@@ -495,7 +512,6 @@
       let responses = [];
       let showAnswers = false;
 
-      // Event Listeners
       document.getElementById("startBtn").addEventListener("click", startQuiz);
       document.getElementById("stopBtn").addEventListener("click", stopQuiz);
       document
@@ -505,7 +521,6 @@
         .getElementById("toggleAnswersBtn")
         .addEventListener("click", toggleAnswersVisibility);
 
-      // Initialize
       loadQuestions();
       setupRealtimeListeners();
       refreshData();
@@ -515,17 +530,42 @@
           .from("questions")
           .select("*")
           .order("question_number", { ascending: true });
-
         if (error) {
           console.error("Error loading questions:", error);
           return;
         }
 
         questions = data || [];
+        document.getElementById("totalQuestions").textContent =
+          questions.length;
+        document.getElementById("totalQNum").textContent = questions.length;
+        renderQuestionTabs();
+
         if (questions.length > 0) {
           currentQuestionIndex = 0;
           displayCurrentQuestion();
         }
+      }
+
+      function renderQuestionTabs() {
+        const tabsContainer = document.getElementById("questionsTabs");
+        tabsContainer.innerHTML = questions
+          .map(
+            (q, idx) => `
+                <button class="question-tab ${
+                  idx === currentQuestionIndex ? "active" : ""
+                }" onclick="selectQuestion(${idx})">
+                    Q${q.question_number}
+                </button>
+            `
+          )
+          .join("");
+      }
+
+      function selectQuestion(index) {
+        currentQuestionIndex = index;
+        displayCurrentQuestion();
+        renderQuestionTabs();
       }
 
       function displayCurrentQuestion() {
@@ -536,7 +576,7 @@
           currentQuestionIndex >= questions.length
         ) {
           display.innerHTML =
-            '<div class="empty-message">No question selected</div>';
+            '<div class="empty-message">Select a question</div>';
           document.getElementById("currentQNum").textContent = "0";
           return;
         }
@@ -545,131 +585,109 @@
         document.getElementById("currentQNum").textContent = q.question_number;
 
         let optionsHtml = "";
+        const optionLabels = ["a", "b", "c", "d", "e", "f"];
 
         if (q.question_type === "multiple_choice") {
-          optionsHtml = `
-                    <div class="label">Options:</div>
-                    <p>A) ${q.option_a}</p>
-                    <p>B) ${q.option_b}</p>
-                    <p>C) ${q.option_c}</p>
-                    <p>D) ${q.option_d}</p>
-                    <div class="label"style="display: none;">Correct Answer:<p><strong>${q.correct_answer}</strong></p></div>
-
-                `;
-        } else if (q.question_type === "checkbox") {
+          optionsHtml = '<div class="label">Options:</div>';
+          optionLabels.forEach((label) => {
+            const key = `option_${label}`;
+            if (q[key]) {
+              optionsHtml += `<p>${label.toUpperCase()}) ${q[key]}</p>`;
+            }
+          });
+        } else {
           const correctAnswers = q.correct_answers
             ? q.correct_answers.split(",")
             : [];
-          optionsHtml = `
-                    <div class="label">Options:</div>
-                    <div class="checkbox-item">
-                        <label>
-                            <input type="checkbox" disabled ${
-                              correctAnswers.includes("A") ? "checked" : ""
-                            }>
-                            ${q.option_a}
-                        </label>
-                    </div>
-                    <div class="checkbox-item">
-                        <label>
-                            <input type="checkbox" disabled ${
-                              correctAnswers.includes("B") ? "checked" : ""
-                            }>
-                            ${q.option_b}
-                        </label>
-                    </div>
-                    <div class="checkbox-item">
-                        <label>
-                            <input type="checkbox" disabled ${
-                              correctAnswers.includes("C") ? "checked" : ""
-                            }>
-                            ${q.option_c}
-                        </label>
-                    </div>
-                    <div class="checkbox-item">
-                        <label>
-                            <input type="checkbox" disabled ${
-                              correctAnswers.includes("D") ? "checked" : ""
-                            }>
-                            ${q.option_d}
-                        </label>
-                    </div>
-                    <div class="label" style="margin-top: 15px;">Correct Answers:</div>
-                    <p><strong>${correctAnswers.join(", ")}</strong></p>
-                `;
+          optionsHtml = '<div class="label">Options:</div>';
+          optionLabels.forEach((label) => {
+            const key = `option_${label}`;
+            if (q[key]) {
+              optionsHtml += `
+                            <div class="checkbox-item">
+                                <label>
+                                    <input type="checkbox" disabled ${
+                                      correctAnswers.includes(
+                                        label.toUpperCase()
+                                      )
+                                        ? "checked"
+                                        : ""
+                                    }>
+                                    ${q[key]}
+                                </label>
+                            </div>
+                        `;
+            }
+          });
         }
+
+        const correctInfo =
+          q.question_type === "multiple_choice"
+            ? `<div style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;"><span class="label">✓ Correct: <strong>${q.correct_answer}</strong></span></div>`
+            : `<div style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;"><span class="label">✓ Correct: <strong>${q.correct_answers}</strong></span></div>`;
 
         display.innerHTML = `
                 <div class="question-display">
                     <span class="question-type-badge">${
                       q.question_type === "multiple_choice"
                         ? "◯ Multiple Choice"
-                        : "☑ Checkbox"
+                        : "☑ Multiple Select"
                     }</span>
                     <h3>Q${q.question_number}: ${q.question_text}</h3>
                     ${optionsHtml}
+                    ${correctInfo}
                 </div>
             `;
+
+        updateResponsesList();
       }
 
       async function startQuiz() {
         if (currentQuestionIndex < 0) {
-          alert("No questions available. Please add questions first.");
+          alert("No questions available");
           return;
         }
-
         quizActive = true;
         updateQuizStatus();
-
         const q = questions[currentQuestionIndex];
-        const { error } = await supabase.from("quiz_state").upsert({
-          id: 1,
-          is_active: true,
-          current_question_id: q.id,
-          question_type: q.question_type,
-        });
-
-        if (error) console.error("Error starting quiz:", error);
+        await supabase
+          .from("quiz_state")
+          .upsert({
+            id: 1,
+            is_active: true,
+            current_question_id: q.id,
+            question_type: q.question_type,
+          });
       }
 
       async function stopQuiz() {
         quizActive = false;
         updateQuizStatus();
-
-        const { error } = await supabase
+        await supabase
           .from("quiz_state")
           .update({ is_active: false })
           .eq("id", 1);
-
-        if (error) console.error("Error stopping quiz:", error);
       }
 
       async function nextQuestion() {
         if (!quizActive) {
-          alert("Please start the quiz first");
+          alert("Start quiz first");
           return;
         }
-
         if (currentQuestionIndex < questions.length - 1) {
           currentQuestionIndex++;
           const q = questions[currentQuestionIndex];
           displayCurrentQuestion();
-
-          const { error } = await supabase
+          renderQuestionTabs();
+          await supabase
             .from("quiz_state")
             .update({
               current_question_id: q.id,
               question_type: q.question_type,
             })
             .eq("id", 1);
-
-          if (error) console.error("Error updating question:", error);
-
-          // Clear responses for new question
-          document.getElementById("responsesList").innerHTML =
-            '<div class="empty-message">Waiting for responses...</div>';
         } else {
-          alert("No more questions. Quiz ended!");
+          alert("No more questions!");
           stopQuiz();
         }
       }
@@ -693,23 +711,17 @@
           .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "participants" },
-            () => {
-              loadParticipants();
-            }
+            () => loadParticipants()
           )
           .subscribe();
-
         supabase
           .channel("responses")
           .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "responses" },
-            () => {
-              loadResponses();
-            }
+            () => loadResponses()
           )
           .subscribe();
-
         supabase
           .channel("quiz_state")
           .on(
@@ -726,16 +738,10 @@
       }
 
       async function loadParticipants() {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("participants")
           .select("*")
           .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("Error loading participants:", error);
-          return;
-        }
-
         participants = data || [];
         updateParticipantsList();
         document.getElementById("participantCount").textContent =
@@ -744,33 +750,38 @@
 
       function updateParticipantsList() {
         const list = document.getElementById("participantsList");
-
         if (participants.length === 0) {
           list.innerHTML =
-            '<div class="empty-message">Waiting for participants to join...</div>';
+            '<div class="empty-message">Waiting for participants...</div>';
           return;
         }
 
-        const q =
-          currentQuestionIndex >= 0 ? questions[currentQuestionIndex] : null;
-        const currentQuestionId = q ? q.id : null;
-
         list.innerHTML = participants
           .map((p) => {
-            const responded = responses.some(
-              (r) =>
-                r.participant_id === p.id && r.question_id === currentQuestionId
-            );
+            const answered = responses.filter(
+              (r) => r.participant_id === p.id
+            ).length;
+            const total = questions.length;
+            const percentage =
+              total > 0 ? Math.round((answered / total) * 100) : 0;
+
             return `
                     <div class="participant-item">
                         <div class="participant-info">
                             <div class="participant-name">${p.name}</div>
                             <div class="participant-dept">${p.department}</div>
+                            <div style="font-size: 0.8em; color: #999; margin-top: 4px;">📊 ${answered}/${total} (${percentage}%)</div>
                         </div>
                         <span class="participant-status ${
-                          responded ? "status-answered" : "status-pending"
+                          answered === total && total > 0
+                            ? "status-answered"
+                            : "status-pending"
                         }">
-                            ${responded ? "✓ Answered" : "⏳ Pending"}
+                            ${
+                              answered === total && total > 0
+                                ? "✅ Done"
+                                : "⏳ Progress"
+                            }
                         </span>
                     </div>
                 `;
@@ -779,18 +790,12 @@
       }
 
       async function loadResponses() {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("responses")
           .select(
             "*, participants(name, department), questions(question_text, correct_answer, correct_answers, question_type)"
           )
           .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("Error loading responses:", error);
-          return;
-        }
-
         responses = data || [];
         updateResponsesList();
         updateParticipantsList();
@@ -798,88 +803,112 @@
 
       function updateResponsesList() {
         const list = document.getElementById("responsesList");
-        const q =
-          currentQuestionIndex >= 0 ? questions[currentQuestionIndex] : null;
-        const currentQuestionId = q ? q.id : null;
+        const statsSection = document.getElementById("responseStatsSection");
 
-        const currentResponses = responses.filter(
-          (r) => r.question_id === currentQuestionId
-        );
-
-        if (currentResponses.length === 0) {
-          list.innerHTML =
-            '<div class="empty-message">No responses yet. Waiting for participants to answer...</div>';
-          document.getElementById("answeredCount").textContent = "0";
+        if (currentQuestionIndex < 0) {
+          list.innerHTML = '<div class="empty-message">Select a question</div>';
+          statsSection.style.display = "none";
           return;
         }
 
+        const q = questions[currentQuestionIndex];
+        const currentResponses = responses.filter(
+          (r) => r.question_id === q.id
+        );
+
+        if (currentResponses.length === 0) {
+          list.innerHTML = '<div class="empty-message">No responses yet</div>';
+          statsSection.style.display = "none";
+          return;
+        }
+
+        statsSection.style.display = "block";
+
         let correctCount = 0;
+        currentResponses.forEach((r) => {
+          let isCorrect = false;
+          if (q.question_type === "multiple_choice") {
+            isCorrect = r.selected_answer === q.correct_answer;
+          } else {
+            const userAnswers = (r.selected_answers || "").split(",").sort();
+            const correctAnswers = (q.correct_answers || "").split(",").sort();
+            isCorrect =
+              JSON.stringify(userAnswers) === JSON.stringify(correctAnswers);
+          }
+          if (isCorrect) correctCount++;
+        });
+
+        const statsHtml = `
+                <div class="response-stats">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #667eea;">📊 Response Stats</div>
+                    <div class="stat-row"><span>Total Responses:</span> <strong>${
+                      currentResponses.length
+                    }</strong></div>
+                    <div class="stat-row"><span>✅ Correct:</span> <strong style="color: #28a745;">${correctCount}</strong></div>
+                    <div class="stat-row"><span>❌ Incorrect:</span> <strong style="color: #dc3545;">${
+                      currentResponses.length - correctCount
+                    }</strong></div>
+                    <div class="stat-row"><span>Success Rate:</span> <strong>${
+                      currentResponses.length > 0
+                        ? Math.round(
+                            (correctCount / currentResponses.length) * 100
+                          )
+                        : 0
+                    }%</strong></div>
+                </div>
+            `;
+
+        document.getElementById("responseStatsSection").innerHTML = statsHtml;
+
         const html = currentResponses
           .map((r) => {
             let isCorrect = false;
             let responseHtml = "";
 
-            if (r.questions.question_type === "multiple_choice") {
-              isCorrect = r.selected_answer === r.questions.correct_answer;
-              if (showAnswers) {
-                responseHtml = `<div class="response-answer ${
-                  isCorrect ? "correct-answer" : "wrong-answer"
-                }">
-                            Selected: <strong>${
-                              r.selected_answer
-                            }</strong> | Correct: <strong>${
-                  r.questions.correct_answer
-                }</strong>
-                        </div>`;
-              } else {
-                responseHtml = `<div class="response-answer">
-                            Selected: <strong>${r.selected_answer}</strong>
-                        </div>`;
-              }
-            } else if (r.questions.question_type === "checkbox") {
-              const userAnswers = r.selected_answers
-                ? r.selected_answers.split(",").sort()
-                : [];
-              const correctAnswers = r.questions.correct_answers
-                ? r.questions.correct_answers.split(",").sort()
-                : [];
+            if (q.question_type === "multiple_choice") {
+              isCorrect = r.selected_answer === q.correct_answer;
+              responseHtml = showAnswers
+                ? `<div class="response-answer ${
+                    isCorrect ? "correct-answer" : "wrong-answer"
+                  }">Selected: <strong>${
+                    r.selected_answer
+                  }</strong> | Correct: <strong>${
+                    q.correct_answer
+                  }</strong></div>`
+                : `<div class="response-answer">Selected: <strong>${r.selected_answer}</strong></div>`;
+            } else {
+              const userAnswers = (r.selected_answers || "").split(",").sort();
+              const correctAnswers = (q.correct_answers || "")
+                .split(",")
+                .sort();
               isCorrect =
                 JSON.stringify(userAnswers) === JSON.stringify(correctAnswers);
-              if (showAnswers) {
-                responseHtml = `<div class="response-answer ${
-                  isCorrect ? "correct-answer" : "wrong-answer"
-                }">
-                            Selected: <strong>${
-                              userAnswers.length > 0
-                                ? userAnswers.join(", ")
-                                : "None"
-                            }</strong> | Correct: <strong>${correctAnswers.join(
-                  ", "
-                )}</strong>
-                        </div>`;
-              } else {
-                responseHtml = `<div class="response-answer">
-                            Selected: <strong>${
-                              userAnswers.length > 0
-                                ? userAnswers.join(", ")
-                                : "None"
-                            }</strong>
-                        </div>`;
-              }
+              const userDisplay =
+                userAnswers.filter((x) => x).length > 0
+                  ? userAnswers.join(", ")
+                  : "None";
+              responseHtml = showAnswers
+                ? `<div class="response-answer ${
+                    isCorrect ? "correct-answer" : "wrong-answer"
+                  }">Selected: <strong>${userDisplay}</strong> | Correct: <strong>${correctAnswers.join(
+                    ", "
+                  )}</strong></div>`
+                : `<div class="response-answer">Selected: <strong>${userDisplay}</strong></div>`;
             }
-
-            if (isCorrect) correctCount++;
 
             return `
                     <div class="response-item">
-                        <div class="response-header">${r.participants.name} ${
-              showAnswers && isCorrect
-                ? "✓"
-                : showAnswers && !isCorrect
-                ? "✗"
-                : ""
-            }</div>
-                        <div class="response-detail">Department: ${
+                        <div class="response-header">
+                            <span>${r.participants.name}</span>
+                            ${
+                              showAnswers && isCorrect
+                                ? '<span style="color: #28a745; font-weight: 600;">✓</span>'
+                                : showAnswers && !isCorrect
+                                ? '<span style="color: #dc3545; font-weight: 600;">✗</span>'
+                                : ""
+                            }
+                        </div>
+                        <div class="response-detail">📍 ${
                           r.participants.department
                         }</div>
                         ${responseHtml}
@@ -889,14 +918,13 @@
           .join("");
 
         list.innerHTML = html;
-        document.getElementById("answeredCount").textContent =
-          currentResponses.length;
       }
 
       function toggleAnswersVisibility() {
         showAnswers = !showAnswers;
-        const btn = document.getElementById("toggleAnswersBtn");
-        btn.textContent = showAnswers ? "👁 Hide Answers" : "👁 Show Answers";
+        document.getElementById("toggleAnswersBtn").textContent = showAnswers
+          ? "👁 Hide Answers"
+          : "👁 Show Answers";
         updateResponsesList();
       }
 
@@ -905,7 +933,6 @@
         loadResponses();
       }
 
-      // Refresh data every 2 seconds
       setInterval(refreshData, 2000);
     </script>
   </body>
