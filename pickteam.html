@@ -67,7 +67,7 @@
       const supabaseUrl = "https://ggyusywsblhyrhbtpupt.supabase.co";
       const supabaseAnonKey =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneXVzeXdzYmxoeXJoYnRwdXB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxNjk1NDAsImV4cCI6MjA2ODc0NTU0MH0.HJyFrT9zm7qC2sQJN9WmubEOzauEU08OrclkkowoAl0";
-      const supabase = window.supabase.createClient(
+      const supabasePickteam = window.supabase.createClient(
         supabaseUrl,
         supabaseAnonKey
       );
@@ -112,7 +112,7 @@
       // ======== LOAD PLAYERS FROM SUPABASE ========
       async function loadPlayers() {
         try {
-          const { data, error } = await supabase
+          const { data, error } = await supabasePickteam
             .from("players")
             .select("*")
             .order("created_at", { ascending: true });
@@ -128,7 +128,7 @@
 
       // ======== PRESENCE TRACKING ========
       async function setupPresenceTracking() {
-        const presenceChannel = supabase.channel("online_users", {
+        const presenceChannel = supabasePickteam.channel("online_users", {
           config: {
             presence: {
               key: myPresenceId,
@@ -156,7 +156,7 @@
       }
 
       async function updatePresence() {
-        const presenceChannel = supabase.channel("online_users");
+        const presenceChannel = supabasePickteam.channel("online_users");
         await presenceChannel.track({
           user_id: myPresenceId,
           online_at: new Date().toISOString(),
@@ -165,7 +165,7 @@
 
       // ======== REALTIME SUBSCRIPTION ========
       function setupRealtimeSubscription() {
-        supabase
+        supabasePickteam
           .channel("players_channel")
           .on(
             "postgres_changes",
@@ -217,7 +217,7 @@
 
           const assignedTeam = getBalancedTeam();
 
-          const { data, error } = await supabase
+          const { data, error } = await supabasePickteam
             .from("players")
             .insert([
               {
@@ -373,7 +373,7 @@
 
       // ======== PAGE UNLOAD - CLEANUP ========
       window.addEventListener("beforeunload", () => {
-        const presenceChannel = supabase.channel("online_users");
+        const presenceChannel = supabasePickteam.channel("online_users");
         presenceChannel.untrack();
       });
 
